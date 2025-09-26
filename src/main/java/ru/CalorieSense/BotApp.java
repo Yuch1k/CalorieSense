@@ -10,9 +10,9 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.CalorieSense.command.system.HelpCommand;
 import ru.CalorieSense.command.system.StartCommand;
 import ru.CalorieSense.command.system.UnknownCommand;
-import ru.CalorieSense.command.feature.HeightCommand;  // TODO: Ввод пользователем своего роста
-import ru.CalorieSense.command.feature.WeightCommand;  // TODO: Ввод пользователем своего веса
-import ru.CalorieSense.command.feature.CaloriesComand; // TODO: Вывод - всего к. осталось к. цель по БЖУ,+Команду на пол
+import ru.CalorieSense.command.feature.HeightCommand;
+import ru.CalorieSense.command.feature.WeightCommand;
+import ru.CalorieSense.command.feature.CaloriesComand;
 import ru.CalorieSense.router.CommandRouter;
 
 public class BotApp extends TelegramLongPollingBot {
@@ -56,7 +56,7 @@ public class BotApp extends TelegramLongPollingBot {
                 router.handle(update);
             }
         } catch (Exception e) {
-            // TODO: логирование/обработка
+
         }
     }
 }
