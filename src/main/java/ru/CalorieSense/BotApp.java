@@ -26,8 +26,15 @@ public class BotApp extends TelegramLongPollingBot {
         }
         this.botToken = botToken;
         this.router = new CommandRouter(new UnknownCommand(this));
+        UserRepository repo = new InMemoryUserRepository();
         this.router.register("/start", new StartCommand(this));
         this.router.register("/help", new HelpCommand(this));
+        this.router.register("/height", new HeightCommand(this, repo));
+        this.router.register("/weight", new WeightCommand(this, repo));
+        this.router.register("/sex", new SexCommand(this, repo));
+        this.router.register("/calories", new CaloriesCommand(this, repo));
+        this.router.register("/age", new AgeCommand(this, repo));
+
     }
 
     public static BotApp fromProperties(String resource) {

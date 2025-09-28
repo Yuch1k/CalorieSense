@@ -16,9 +16,11 @@ public class HelpCommand implements Command {
             "Доступные команды:\n" +
                     "/start - начать работу\n" +
                     "/help - показать эту справку\n" +
-                    "/Calories - Показать информацию за сегодня\n" +
-                    "/Weight - Обновить мой вес\n" +
-                    "/Height - Обновить мой рост\n";
+                    "/weight - обновить мой вес\n" +
+                    "/height - обновить мой рост\n" +
+                    "/gender - указать пол (M/F)\n" +
+                    "/age - обновить возраст\n" +
+                    "/calories - показать дневную норму калорий\n";
 
     @Override
     public void execute(Update update) throws Exception {
