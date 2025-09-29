@@ -19,9 +19,9 @@ public class WeightCommandTest {
         WeightCommand cmd = new WeightCommand(bot, repo);
 
         Update update = new Update();
-        Message msg = new Message();
-        msg.setChatId(123L);
-        msg.setText("/weight 180");
+        Message msg = Mockito.mock(Message.class);
+        Mockito.when(msg.getChatId()).thenReturn(123L);
+        Mockito.when(msg.getText()).thenReturn("/weight 70");
         update.setMessage(msg);
 
         cmd.execute(update);

@@ -19,9 +19,9 @@ public class SexCommandTest {
         SexCommand cmd = new SexCommand(bot, repo);
 
         Update update = new Update();
-        Message msg = new Message();
-        msg.setChatId(123L);
-        msg.setText("/sex Ж");
+        Message msg = Mockito.mock(Message.class);
+        Mockito.when(msg.getChatId()).thenReturn(123L);
+        Mockito.when(msg.getText()).thenReturn("/gender Ж");
         update.setMessage(msg);
 
         cmd.execute(update);

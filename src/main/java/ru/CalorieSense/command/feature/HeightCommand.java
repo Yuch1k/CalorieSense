@@ -27,6 +27,11 @@ public class HeightCommand implements Command {
 
         try {
             int height = Integer.parseInt(parts[1]);
+            if (height < 100 || height > 300) {
+                sender.execute(new SendMessage(String.valueOf(chatId),
+                        "Рост должен быть в пределах от 100 до 300 см"));
+                return;
+            }
             repository.updateHeight(chatId, height);
             sender.execute(new SendMessage(String.valueOf(chatId), "Рост сохранен: " + height + " см"));
         } catch (NumberFormatException e) {

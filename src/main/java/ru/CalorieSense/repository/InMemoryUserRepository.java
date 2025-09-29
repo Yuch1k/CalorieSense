@@ -1,38 +1,48 @@
 package ru.CalorieSense.repository;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
 import ru.CalorieSense.model.UserProfile;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class InMemoryUserRepository implements UserRepository {
-    private final Map<Long, UserProfile> storage = new ConcurrentHashMap<>();
+    private final Map<Long, UserProfile> storage = new HashMap<>();
 
     @Override
     public UserProfile findByChatId(Long chatId) {
-        return storage.get(chatId);
+        return storage.computeIfAbsent(chatId, UserProfile::new);
     }
 
-    private UserProfile getOrCreate(Long chatId) {
-        return storage.computeIfAbsent(chatId, id -> new UserProfile());
+    @Override
+    public void save(UserProfile profile) {
+        storage.put(profile.getChatId(), profile);
     }
 
     @Override
     public void updateWeight(Long chatId, double weight) {
-        getOrCreate(chatId).setWeight(weight);
+        UserProfile profile = findByChatId(chatId);
+        profile.setWeight(weight);
+        save(profile);
     }
 
     @Override
     public void updateHeight(Long chatId, int height) {
-        getOrCreate(chatId).setHeight(height);
+        UserProfile profile = findByChatId(chatId);
+        profile.setHeight(height);
+        save(profile);
     }
 
     @Override
     public void updateSex(Long chatId, String sex) {
-        getOrCreate(chatId).setSex(sex);
+        UserProfile profile = findByChatId(chatId);
+        profile.setSex(sex);
+        save(profile);
     }
 
-
-    public void updateAge(Long chatID, int age) {
-        getOrCreate(chatID).setAge(age);
+    @Override
+    public void updateAge(Long chatId, int age) {
+        UserProfile profile = findByChatId(chatId);
+        profile.setAge(age);
+        save(profile);
     }
 }

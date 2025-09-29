@@ -31,7 +31,7 @@ public class SexCommand implements Command {
             return;
         }
 
-        repository.updateSex(chatId, gender);
+        repository.updateSex(chatId, sex);
         sender.execute(new SendMessage(String.valueOf(chatId), "Пол сохранен: " + (sex.equals("М") ? "Мужской" : "Женский")));
     }
 }

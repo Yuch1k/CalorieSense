@@ -18,7 +18,7 @@ public class HelpCommand implements Command {
                     "/help - показать эту справку\n" +
                     "/weight - обновить мой вес\n" +
                     "/height - обновить мой рост\n" +
-                    "/gender - указать пол (M/F)\n" +
+                    "/sex - указать пол (М/Ж)\n" +
                     "/age - обновить возраст\n" +
                     "/calories - показать дневную норму калорий\n";
 

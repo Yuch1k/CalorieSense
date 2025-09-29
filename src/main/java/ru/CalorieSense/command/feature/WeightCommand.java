@@ -27,6 +27,11 @@ public class WeightCommand implements Command {
 
         try {
             double weight = Double.parseDouble(parts[1]);
+            if (weight < 30 || weight > 300) {
+                sender.execute(new SendMessage(String.valueOf(chatId),
+                        "Вес должен быть в пределах от 30 до 300 кг"));
+                return;
+            }
             repository.updateWeight(chatId, weight);
             sender.execute(new SendMessage(String.valueOf(chatId), "Вес сохранен: " + weight + " кг"));
         } catch (NumberFormatException e) {

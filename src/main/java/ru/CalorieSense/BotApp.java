@@ -12,8 +12,12 @@ import ru.CalorieSense.command.system.StartCommand;
 import ru.CalorieSense.command.system.UnknownCommand;
 import ru.CalorieSense.command.feature.HeightCommand;
 import ru.CalorieSense.command.feature.WeightCommand;
-import ru.CalorieSense.command.feature.CaloriesComand;
+import ru.CalorieSense.command.feature.CaloriesCommand;
+import ru.CalorieSense.command.feature.SexCommand;
+import ru.CalorieSense.command.feature.AgeCommand;
 import ru.CalorieSense.router.CommandRouter;
+import ru.CalorieSense.repository.UserRepository;
+import ru.CalorieSense.repository.InMemoryUserRepository;
 
 public class BotApp extends TelegramLongPollingBot {
 

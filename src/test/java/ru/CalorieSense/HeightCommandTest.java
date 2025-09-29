@@ -19,9 +19,9 @@ public class HeightCommandTest {
         HeightCommand cmd = new HeightCommand(bot, repo);
 
         Update update = new Update();
-        Message msg = new Message();
-        msg.setChatId(123L);
-        msg.setText("/height 180");
+        Message msg = Mockito.mock(Message.class);
+        Mockito.when(msg.getChatId()).thenReturn(123L);
+        Mockito.when(msg.getText()).thenReturn("/height 190");
         update.setMessage(msg);
 
         cmd.execute(update);
