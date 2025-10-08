@@ -1,7 +1,6 @@
 package ru.CalorieSense.router;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import ru.CalorieSense.command.Command;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -20,6 +19,7 @@ public class CommandRouterTest {
 
         Update update = new Update();
         Message msg = new Message();
+        msg.setChat();
         msg.setText("/hello");
         update.setMessage(msg);
 

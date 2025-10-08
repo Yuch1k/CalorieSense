@@ -2,11 +2,15 @@ package ru.CalorieSense;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import ru.CalorieSense.command.Command;
+import ru.CalorieSense.command.scenario.RegisterScenario;
 import ru.CalorieSense.command.system.HelpCommand;
 import ru.CalorieSense.command.system.StartCommand;
 import ru.CalorieSense.command.system.UnknownCommand;
@@ -18,11 +22,13 @@ import ru.CalorieSense.command.feature.AgeCommand;
 import ru.CalorieSense.router.CommandRouter;
 import ru.CalorieSense.repository.UserRepository;
 import ru.CalorieSense.repository.InMemoryUserRepository;
+import ru.CalorieSense.command.feature.CalorieCalculatorService;
 
 public class BotApp extends TelegramLongPollingBot {
 
     private final String botToken;
     private final CommandRouter router;
+    private final CalorieCalculatorService calculator;
 
     private BotApp(String botToken) {
         if (botToken == null || botToken.isBlank()) {
@@ -31,14 +37,15 @@ public class BotApp extends TelegramLongPollingBot {
         this.botToken = botToken;
         this.router = new CommandRouter(new UnknownCommand(this));
         UserRepository repo = new InMemoryUserRepository();
+        this.calculator = new CalorieCalculatorService();
         this.router.register("/start", new StartCommand(this));
         this.router.register("/help", new HelpCommand(this));
         this.router.register("/height", new HeightCommand(this, repo));
         this.router.register("/weight", new WeightCommand(this, repo));
-        this.router.register("/sex", new SexCommand(this, repo));
-        this.router.register("/calories", new CaloriesCommand(this, repo));
         this.router.register("/age", new AgeCommand(this, repo));
-
+        this.router.register("/sex", new SexCommand(this, repo));
+        this.router.register("/calories", new CaloriesCommand(this, repo, calculator));
+        this.router.register("/register", new RegisterScenario(this, repo));
     }
 
     public static BotApp fromProperties(String resource) {

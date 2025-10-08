@@ -6,38 +6,28 @@ import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
+import ru.CalorieSense.command.feature.CalorieCalculatorService;
 
 public class CaloriesCommand implements Command {
     private final BotApp sender;
     private final UserRepository repository;
+    private final CalorieCalculatorService calculator;
 
-    public CaloriesCommand(BotApp sender, UserRepository repository) {
+    public CaloriesCommand(BotApp sender, UserRepository repository, CalorieCalculatorService calculator) {
         this.sender = sender;
         this.repository = repository;
+        this.calculator = calculator;
     }
 
     @Override
     public void execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
         UserProfile profile = repository.findByChatId(chatId);
+        int calories = calculator.calculate(profile);
 
-        if (profile == null || profile.getHeight() == 0 || profile.getWeight() == 0 || profile.getSex() == null || profile.getAge() == 0) {
-            sender.execute(new SendMessage(String.valueOf(chatId),
-                    "Недостаточно данных. Введите: /weight, /height, /sex, /age"));
-            return;
-        }
-
-        String message = String.format(
-                "Ваши данные:\n" +
-                        "Вес: %.1f кг\nРост: %d см\nПол: %s\nВозраст: %d лет\n\n" +
-                        "Ваша дневная норма калорий: %d ккал",
-                profile.getWeight(),
-                profile.getHeight(),
-                profile.getSex(),
-                profile.getAge(),
-                profile.getCaloriesGoal()
-        );
-
-        sender.execute(new SendMessage(String.valueOf(chatId), message));
+        sender.execute(SendMessage.builder()
+                .chatId(chatId.toString())
+                .text("Ваша дневная норма калорий: " + calories + " ккал")
+                .build());
     }
 }
