@@ -6,11 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class InMemoryUserRepository implements UserRepository {
+
     private final Map<Long, UserProfile> storage = new HashMap<>();
 
     @Override
     public UserProfile findByChatId(Long chatId) {
-        return storage.computeIfAbsent(chatId, UserProfile::new);
+        return storage.computeIfAbsent(chatId, id -> new UserProfile(id));
     }
 
     @Override
@@ -43,6 +44,20 @@ public class InMemoryUserRepository implements UserRepository {
     public void updateAge(Long chatId, int age) {
         UserProfile profile = findByChatId(chatId);
         profile.setAge(age);
+        save(profile);
+    }
+
+    @Override
+    public void updateGoal(Long chatId, String goal) {
+        UserProfile profile = findByChatId(chatId);
+        profile.setGoal(goal);
+        save(profile);
+    }
+
+    @Override
+    public void updateActivityLevel(Long chatId, String activityLevel) {
+        UserProfile profile = findByChatId(chatId);
+        profile.setActivityLevel(activityLevel);
         save(profile);
     }
 }

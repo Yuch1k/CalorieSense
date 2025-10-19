@@ -7,14 +7,35 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.CalorieSense.command.Command;
 
 public class CommandRouter {
+
     private final Map<String, Command> commands = new HashMap<>();
     private final Command fallback;
-
     private final Map<Long, Command> activeScenarios = new HashMap<>();
+
+    private final Map<String, String> buttonToCommand = new HashMap<>();
 
     public CommandRouter(Command fallback) {
         this.fallback = fallback;
+        initButtonMapping();
     }
+
+    private void initButtonMapping() {
+        // Главное меню
+        buttonToCommand.put("📊 Мои калории", "/calories");
+        buttonToCommand.put("📝 Регистрация", "/register");
+        buttonToCommand.put("⚙️ Поменять параметры", "/editparams");
+        buttonToCommand.put("❓ Помощь", "/help");
+
+        // Меню редактирования параметров
+        buttonToCommand.put("⚖️ Вес", "/weight");
+        buttonToCommand.put("📏 Рост", "/height");
+        buttonToCommand.put("🎂 Возраст", "/age");
+        buttonToCommand.put("👤 Профиль", "/profile");
+        buttonToCommand.put("🎯 Цель", "/goal");
+        buttonToCommand.put("💪 Активность", "/activity");
+        buttonToCommand.put("◀️ Назад в главное меню", "/backtomain");
+    }
+
 
     public void register(String name, Command handler) {
         commands.put(name.toLowerCase(), handler);
@@ -23,6 +44,10 @@ public class CommandRouter {
     public void handle(Update update) throws Exception {
         String text = update.getMessage().getText().trim();
         Long chatId = update.getMessage().getChatId();
+
+        if (buttonToCommand.containsKey(text)) {
+            text = buttonToCommand.get(text);
+        }
 
         String cmd = text.split("\\s+")[0].toLowerCase();
 
@@ -34,11 +59,9 @@ public class CommandRouter {
             if (handler.getClass().getSimpleName().contains("Scenario")) {
                 activeScenarios.put(chatId, handler);
             }
-        }
-        else if (activeScenarios.containsKey(chatId)) {
+        } else if (activeScenarios.containsKey(chatId)) {
             activeScenarios.get(chatId).execute(update);
-        }
-        else {
+        } else {
             fallback.execute(update);
         }
     }

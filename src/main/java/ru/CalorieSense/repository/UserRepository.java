@@ -8,5 +8,7 @@ public interface UserRepository {
     void updateWeight(Long chatId, double weight);
     void updateHeight(Long chatId, int height);
     void updateSex(Long chatId, String sex);
-    void updateAge(Long chatID, int age);
+    void updateAge(Long chatId, int age);
+    void updateGoal(Long chatId, String goal);
+    void updateActivityLevel(Long chatId, String activityLevel);
 }

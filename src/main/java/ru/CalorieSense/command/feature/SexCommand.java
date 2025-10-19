@@ -4,7 +4,6 @@ import ru.CalorieSense.BotApp;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 
-
 public class SexCommand extends AbstractUserParamCommand {
 
     public SexCommand(BotApp sender, UserRepository repository) {
@@ -18,5 +17,17 @@ public class SexCommand extends AbstractUserParamCommand {
             throw new IllegalArgumentException("Введите М или Ж");
         }
         profile.setSex(normalized);
+    }
+
+    @Override
+    protected String getExampleValue() {
+        return "М";
+    }
+
+    @Override
+    protected String getPromptMessage() {
+        return "👤 Введите ваш пол:\n\n" +
+                "Формат: `/sex <М или Ж>`\n\n" +
+                "Например: `/sex М`";
     }
 }

@@ -4,8 +4,10 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
+import ru.CalorieSense.ui.KeyboardFactory;
 
 public class HelpCommand implements Command {
+
     private final BotApp sender;
 
     public HelpCommand(BotApp sender) {
@@ -13,22 +15,32 @@ public class HelpCommand implements Command {
     }
 
     private static final String HELP_MESSAGE =
-            "Доступные команды:\n" +
-                    "/start - начать работу\n" +
-                    "/help - показать эту справку\n" +
-                    "/weight - обновить мой вес\n" +
-                    "/height - обновить мой рост\n" +
-                    "/sex - указать пол (М/Ж)\n" +
-                    "/register — пройти регистрацию (ввод параметров: пол, возраст, рост, вес)\n" +
-                    "/age - обновить возраст\n" +
-                    "/calories - показать дневную норму калорий\n";
+            "📋 *Доступные команды:*\n\n" +
+                    "📊 *Мои калории* — показать дневную норму калорий и БЖУ\n" +
+                    "📝 *Регистрация* — пройти регистрацию (ввод всех параметров)\n" +
+                    "👤 *Профиль* — просмотр и изменение параметров профиля\n" +  // ИЗМЕНЕНО
+                    "❓ *Помощь* — показать эту справку\n\n" +
+                    "━━━━━━━━━━━━━━━━\n\n" +
+                    "*В профиле можно изменить:*\n" +
+                    "• Вес\n" +
+                    "• Рост\n" +
+                    "• Возраст\n" +
+                    "• Пол\n" +
+                    "• Цель (похудение/поддержание/набор)\n" +
+                    "• Уровень активности\n\n" +
+                    "Вы можете использовать кнопки меню или команды вида `/calories`";
 
     @Override
     public void execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
-        sender.execute(SendMessage.builder()
+
+        SendMessage message = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
                 .text(HELP_MESSAGE)
-                .build());
+                .parseMode("Markdown")
+                .replyMarkup(KeyboardFactory.getMainKeyboard())
+                .build();
+
+        sender.execute(message);
     }
 }
