@@ -1,4 +1,4 @@
-package ru.CalorieSense.command.feature;
+package ru.CalorieSense.command.base;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -8,14 +8,14 @@ import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 import ru.CalorieSense.ui.KeyboardFactory;
 
-public abstract class AbstractUserParamCommand implements Command {
+public abstract class AbstractParameterCommand implements Command {
 
     protected final BotApp sender;
     protected final UserRepository repository;
     private final String commandName;
     private final String paramName;
 
-    protected AbstractUserParamCommand(BotApp sender, UserRepository repository,
+    protected AbstractParameterCommand(BotApp sender, UserRepository repository,
                                        String commandName, String paramName) {
         this.sender = sender;
         this.repository = repository;

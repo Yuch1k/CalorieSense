@@ -1,8 +1,9 @@
-package ru.CalorieSense.command.feature;
+package ru.CalorieSense.command.nutrition;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import ru.CalorieSense.BotApp;
+import ru.CalorieSense.command.user.profile.WeightCommand;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 import org.telegram.telegrambots.meta.api.objects.Message;

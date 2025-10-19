@@ -1,10 +1,11 @@
-package ru.CalorieSense.command.feature;
+package ru.CalorieSense.command.user.profile;
 
 import ru.CalorieSense.BotApp;
+import ru.CalorieSense.command.base.AbstractParameterCommand;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 
-public class AgeCommand extends AbstractUserParamCommand {
+public class AgeCommand extends AbstractParameterCommand {
 
     public AgeCommand(BotApp sender, UserRepository repository) {
         super(sender, repository, "/age", "возраст");

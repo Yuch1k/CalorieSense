@@ -1,4 +1,4 @@
-package ru.CalorieSense.command.feature;
+package ru.CalorieSense.service.nutrition;
 
 import ru.CalorieSense.model.MacronutrientResult;
 import ru.CalorieSense.model.UserProfile;

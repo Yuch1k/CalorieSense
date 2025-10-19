@@ -1,10 +1,11 @@
-package ru.CalorieSense.command.feature;
+package ru.CalorieSense.command.user.profile;
 
 import ru.CalorieSense.BotApp;
+import ru.CalorieSense.command.base.AbstractParameterCommand;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 
-public class HeightCommand extends AbstractUserParamCommand {
+public class HeightCommand extends AbstractParameterCommand {
 
     public HeightCommand(BotApp sender, UserRepository repository) {
         super(sender, repository, "/height", "рост");

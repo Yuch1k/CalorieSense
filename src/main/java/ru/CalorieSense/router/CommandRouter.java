@@ -23,18 +23,25 @@ public class CommandRouter {
         // Главное меню
         buttonToCommand.put("📊 Мои калории", "/calories");
         buttonToCommand.put("📝 Регистрация", "/register");
-        buttonToCommand.put("⚙️ Поменять параметры", "/editparams");
+        buttonToCommand.put("👤 Профиль", "/profile");
+        buttonToCommand.put("🍽️ Добавить приём пищи", "/addmeal");
         buttonToCommand.put("❓ Помощь", "/help");
 
         // Меню редактирования параметров
         buttonToCommand.put("⚖️ Вес", "/weight");
         buttonToCommand.put("📏 Рост", "/height");
         buttonToCommand.put("🎂 Возраст", "/age");
-        buttonToCommand.put("👤 Профиль", "/profile");
+        buttonToCommand.put("👤 Пол", "/sex");
         buttonToCommand.put("🎯 Цель", "/goal");
         buttonToCommand.put("💪 Активность", "/activity");
+
+        // Меню добавления приёма пищи
+        buttonToCommand.put("✍️ Ввести вручную", "/manualinput");
+        buttonToCommand.put("📸 Ввести по фото", "/photoinput");
+
         buttonToCommand.put("◀️ Назад в главное меню", "/backtomain");
     }
+
 
 
     public void register(String name, Command handler) {
@@ -53,10 +60,17 @@ public class CommandRouter {
 
         if (cmd.startsWith("/")) {
             Command handler = commands.getOrDefault(cmd, fallback);
-            activeScenarios.remove(chatId);
+
+            boolean isScenario = handler.getClass().getSimpleName().contains("Scenario") ||
+                    handler.getClass().getSimpleName().equals("ManualInputCommand");
+
+            if (!isScenario) {
+                activeScenarios.remove(chatId);
+            }
+
             handler.execute(update);
 
-            if (handler.getClass().getSimpleName().contains("Scenario")) {
+            if (isScenario) {
                 activeScenarios.put(chatId, handler);
             }
         } else if (activeScenarios.containsKey(chatId)) {

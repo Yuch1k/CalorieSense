@@ -1,7 +1,7 @@
 package ru.CalorieSense.service;
 
-import ru.CalorieSense.command.feature.CalorieCalculatorService;
 import ru.CalorieSense.model.UserProfile;
+import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
 
 public class UserProfileFormatter {
 

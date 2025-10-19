@@ -8,23 +8,39 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import ru.CalorieSense.command.Command;
-import ru.CalorieSense.command.scenario.RegisterScenario;
-import ru.CalorieSense.command.system.HelpCommand;
+
+// Системные команды
 import ru.CalorieSense.command.system.StartCommand;
-import ru.CalorieSense.command.system.UnknownCommand;
-import ru.CalorieSense.command.system.EditParamsCommand;
+import ru.CalorieSense.command.system.HelpCommand;
 import ru.CalorieSense.command.system.BackToMainCommand;
-import ru.CalorieSense.command.feature.HeightCommand;
-import ru.CalorieSense.command.feature.WeightCommand;
-import ru.CalorieSense.command.feature.CaloriesCommand;
-import ru.CalorieSense.command.feature.SexCommand;
-import ru.CalorieSense.command.feature.AgeCommand;
-import ru.CalorieSense.command.feature.GoalCommand;
-import ru.CalorieSense.command.feature.ActivityCommand;
+import ru.CalorieSense.command.system.UnknownCommand;
+
+// Команды пользователя
+import ru.CalorieSense.command.user.profile.ProfileCommand;
+import ru.CalorieSense.command.user.profile.HeightCommand;
+import ru.CalorieSense.command.user.profile.WeightCommand;
+import ru.CalorieSense.command.user.profile.AgeCommand;
+import ru.CalorieSense.command.user.profile.SexCommand;
+import ru.CalorieSense.command.user.profile.GoalCommand;
+import ru.CalorieSense.command.user.profile.ActivityCommand;
+import ru.CalorieSense.command.user.registration.RegisterScenario;
+
+// Команды питания
+import ru.CalorieSense.command.nutrition.CaloriesCommand;
+import ru.CalorieSense.command.nutrition.meal.AddMealCommand;
+import ru.CalorieSense.command.nutrition.meal.ManualInputCommand;
+import ru.CalorieSense.command.nutrition.meal.PhotoInputCommand;
+
+// Сервисы
+import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
+import ru.CalorieSense.service.nutrition.MealTrackingService;
+
+// Репозитории
 import ru.CalorieSense.router.CommandRouter;
 import ru.CalorieSense.repository.UserRepository;
 import ru.CalorieSense.repository.InMemoryUserRepository;
-import ru.CalorieSense.command.feature.CalorieCalculatorService;
+import ru.CalorieSense.repository.MealRepository;
+import ru.CalorieSense.repository.InMemoryMealRepository;
 
 public class BotApp extends TelegramLongPollingBot {
 
@@ -35,38 +51,59 @@ public class BotApp extends TelegramLongPollingBot {
         super(botToken);
         this.botUsername = botUsername;
 
-        UserRepository repository = new InMemoryUserRepository();
-        CalorieCalculatorService calculator = new CalorieCalculatorService();
+        // Репозитории
+        UserRepository userRepository = new InMemoryUserRepository();
+        InMemoryMealRepository mealRepository = new InMemoryMealRepository();
 
+        // Сервисы
+        CalorieCalculatorService calculator = new CalorieCalculatorService();
+        MealTrackingService mealTracker = new MealTrackingService(mealRepository);
+
+        // Системные команды
         Command unknownCommand = new UnknownCommand(this);
         Command startCommand = new StartCommand(this);
         Command helpCommand = new HelpCommand(this);
-        Command registerScenario = new RegisterScenario(this, repository);
-        Command caloriesCommand = new CaloriesCommand(this, repository, calculator);
-        Command weightCommand = new WeightCommand(this, repository);
-        Command heightCommand = new HeightCommand(this, repository);
-        Command sexCommand = new SexCommand(this, repository);
-        Command ageCommand = new AgeCommand(this, repository);
-        Command editParamsCommand = new EditParamsCommand(this, repository, calculator);
         Command backToMainCommand = new BackToMainCommand(this);
-        Command goalCommand = new GoalCommand(this, repository);
-        Command activityCommand = new ActivityCommand(this, repository, calculator);
 
+        // Команды пользователя
+        Command registerScenario = new RegisterScenario(this, userRepository);
+        Command editParamsCommand = new ProfileCommand(this, userRepository, calculator);
+        Command heightCommand = new HeightCommand(this, userRepository);
+        Command weightCommand = new WeightCommand(this, userRepository);
+        Command ageCommand = new AgeCommand(this, userRepository);
+        Command sexCommand = new SexCommand(this, userRepository);
+        Command goalCommand = new GoalCommand(this, userRepository);
+        Command activityCommand = new ActivityCommand(this, userRepository, calculator);
 
+        // Команды питания
+        Command caloriesCommand = new CaloriesCommand(this, userRepository, calculator, mealTracker);
+        Command addMealCommand = new AddMealCommand(this);
+        Command manualInputCommand = new ManualInputCommand(this, mealRepository);
+        Command photoInputCommand = new PhotoInputCommand(this);
+
+        // Инициализация роутера
         this.router = new CommandRouter(unknownCommand);
 
+        // Регистрация системных команд
         router.register("/start", startCommand);
         router.register("/help", helpCommand);
-        router.register("/register", registerScenario);
-        router.register("/calories", caloriesCommand);
-        router.register("/weight", weightCommand);
-        router.register("/height", heightCommand);
-        router.register("/sex", sexCommand);
-        router.register("/age", ageCommand);
-        router.register("/profile", editParamsCommand);
         router.register("/backtomain", backToMainCommand);
+
+        // Регистрация команд пользователя
+        router.register("/register", registerScenario);
+        router.register("/profile", editParamsCommand);
+        router.register("/height", heightCommand);
+        router.register("/weight", weightCommand);
+        router.register("/age", ageCommand);
+        router.register("/sex", sexCommand);
         router.register("/goal", goalCommand);
         router.register("/activity", activityCommand);
+
+        // Регистрация команд питания
+        router.register("/calories", caloriesCommand);
+        router.register("/addmeal", addMealCommand);
+        router.register("/manualinput", manualInputCommand);
+        router.register("/photoinput", photoInputCommand);
     }
 
     @Override

@@ -1,9 +1,10 @@
-package ru.CalorieSense.command.feature;
+package ru.CalorieSense.command.user.profile;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
+import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 import ru.CalorieSense.ui.KeyboardFactory;

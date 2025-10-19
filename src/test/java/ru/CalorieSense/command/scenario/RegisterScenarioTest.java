@@ -3,7 +3,7 @@ package ru.CalorieSense.command.scenario;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import ru.CalorieSense.BotApp;
-import ru.CalorieSense.command.scenario.RegisterScenario;
+import ru.CalorieSense.command.user.registration.RegisterScenario;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 import org.telegram.telegrambots.meta.api.objects.Message;

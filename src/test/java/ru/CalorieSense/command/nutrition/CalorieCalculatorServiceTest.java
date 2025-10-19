@@ -1,7 +1,8 @@
-package ru.CalorieSense.command.feature;
+package ru.CalorieSense.command.nutrition;
 
 import org.junit.jupiter.api.Test;
 import ru.CalorieSense.model.UserProfile;
+import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
 
 import static org.junit.jupiter.api.Assertions.*;
 
