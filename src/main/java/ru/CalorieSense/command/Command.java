@@ -1,6 +1,7 @@
 package ru.CalorieSense.command;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import ru.CalorieSense.messaging.BotResponse;
 
 public interface Command {
-    void execute(Update update) throws Exception;
+    BotResponse execute(Update update) throws Exception;
 }

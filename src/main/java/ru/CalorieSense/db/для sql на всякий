@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS user_profile (
+    chat_id        BIGINT PRIMARY KEY,
+    weight         DOUBLE PRECISION,
+    height         INTEGER,
+    age            INTEGER,
+    sex            VARCHAR(10),
+    goal           VARCHAR(20),
+    activity_level VARCHAR(20),
+    calories_goal  INTEGER
+);
+
+
+
+CREATE TABLE IF NOT EXISTS meal (
+    id          BIGINT PRIMARY KEY,
+    chat_id     BIGINT NOT NULL REFERENCES user_profile(chat_id) ON DELETE CASCADE,
+    timestamp   TIMESTAMP NOT NULL,
+    calories    INTEGER NOT NULL,
+    protein     INTEGER NOT NULL,
+    fats        INTEGER NOT NULL,
+    carbs       INTEGER NOT NULL,
+    description TEXT
+);

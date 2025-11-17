@@ -2,28 +2,25 @@ package ru.CalorieSense.command.system;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.ui.KeyboardFactory;
 
 public class UnknownCommand implements Command {
 
-    private final BotApp sender;
+    private final BotApp botApp;
 
-    public UnknownCommand(BotApp sender) {
-        this.sender = sender;
+    public UnknownCommand(BotApp botApp) {
+        this.botApp = botApp;
     }
 
     @Override
-    public void execute(Update update) throws Exception {
+    public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
-
-        SendMessage message = SendMessage.builder()
-                .chatId(String.valueOf(chatId))
-                .text("❓ Неизвестная команда.\n\nИспользуйте кнопки ниже или команду /help")
-                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                .build();
-
-        sender.execute(message);
+        String message = "❓ Неизвестная команда.\n\nИспользуйте кнопки ниже или команду /help";
+        ReplyKeyboard keyboard = KeyboardFactory.getMainKeyboard();
+        return new BotResponse(chatId, message, "Markdown", keyboard);
     }
 }

@@ -8,7 +8,7 @@ import ru.CalorieSense.model.Meal;
 import ru.CalorieSense.model.MealInputState;
 import ru.CalorieSense.repository.InMemoryMealRepository;
 import ru.CalorieSense.ui.KeyboardFactory;
-
+import ru.CalorieSense.repository.MealRepository;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,10 +16,10 @@ import java.util.Map;
 public class ManualInputCommand implements Command {
 
     private final BotApp sender;
-    private final InMemoryMealRepository mealRepository;
+    private final MealRepository mealRepository;
     private final Map<Long, MealInputState> stateMap = new HashMap<>();
 
-    public ManualInputCommand(BotApp sender, InMemoryMealRepository mealRepository) {
+    public ManualInputCommand(BotApp sender, MealRepository mealRepository) {
         this.sender = sender;
         this.mealRepository = mealRepository;
     }

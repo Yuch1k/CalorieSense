@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface MealRepository {
 
+    Long generateId();
+
      // Добавить приём пищи
     void addMeal(Meal meal);
 
