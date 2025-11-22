@@ -2,8 +2,10 @@ package ru.CalorieSense.command.user.profile;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
@@ -23,7 +25,7 @@ public class ActivityCommand implements Command {
     }
 
     @Override
-    public void execute(Update update) throws Exception {
+    public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
         String text = update.getMessage().getText().trim();
 
@@ -31,14 +33,14 @@ public class ActivityCommand implements Command {
 
         if (!isDirectCommand) {
             showActivityPrompt(chatId);
-            return;
+
         }
 
         String[] parts = text.split("\\s+", 2);
 
         if (parts.length < 2) {
             showActivityPrompt(chatId);
-            return;
+
         }
 
         String input = parts[1];
@@ -58,43 +60,30 @@ public class ActivityCommand implements Command {
             activity = "high";
             activityText = "Большая активность (более 2 тренировок в неделю)";
         } else {
-            sender.execute(SendMessage.builder()
-                    .chatId(String.valueOf(chatId))
-                    .text("❌ Некорректный выбор.\n\nВведите `/activity 1`, `/activity 2` или `/activity 3`")
-                    .parseMode("Markdown")
-                    .replyMarkup(KeyboardFactory.getEditParamsKeyboard())
-                    .build());
-            return;
+            ReplyKeyboard keyboard = KeyboardFactory.getEditParamsKeyboard();
+            return new BotResponse(chatId,
+                    "❌ Некорректный выбор.\n\nВведите `/activity 1`, `/activity 2` или `/activity 3`",
+                    "Markdown", keyboard);
         }
 
         UserProfile profile = repository.findByChatId(chatId);
         profile.setActivityLevel(activity);
         repository.save(profile);
-
-        sender.execute(SendMessage.builder()
-                .chatId(String.valueOf(chatId))
-                .text("✅ Уровень активности обновлён: *" + activityText + "*\n\n" +
-                        "Используйте '📊 Мои калории' для просмотра обновлённых расчётов.\n\n" +
-                        "Возврат в главное меню.")
-                .parseMode("Markdown")
-                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                .build());
+        ReplyKeyboard keyboard = KeyboardFactory.getEditParamsKeyboard();
+        return new BotResponse(chatId, "✅ Уровень активности обновлён: *" + activityText + "*\n\n" +
+                "Используйте '📊 Мои калории' для просмотра обновлённых расчётов.\n\n" +
+                "Возврат в главное меню.", "Markdown", keyboard);
     }
 
-    private void showActivityPrompt(Long chatId) throws Exception {
+    private BotResponse showActivityPrompt(Long chatId) throws Exception {
         UserProfile profile = repository.findByChatId(chatId);
         String currentActivity = calculator.getActivityLevelText(profile.getActivityLevel());
-
-        sender.execute(SendMessage.builder()
-                .chatId(String.valueOf(chatId))
-                .text("💪 *Текущий уровень активности:* " + currentActivity + "\n\n" +
-                        "Выберите новый уровень:\n\n" +
-                        "Введите:\n" +
-                        "• `/activity 1` — Малая (без тренировок, сидячая работа)\n" +
-                        "• `/activity 2` — Средняя (1-2 тренировки в неделю)\n" +
-                        "• `/activity 3` — Большая (более 2 тренировок в неделю)")
-                .parseMode("Markdown")
-                .replyMarkup(KeyboardFactory.getEditParamsKeyboard())
-                .build());
+        ReplyKeyboard keyboard = KeyboardFactory.getEditParamsKeyboard();
+        return new BotResponse(chatId, "💪 *Текущий уровень активности:* " + currentActivity + "\n\n" +
+                "Выберите новый уровень:\n\n" +
+                "Введите:\n" +
+                "• `/activity 1` — Малая (без тренировок, сидячая работа)\n" +
+                "• `/activity 2` — Средняя (1-2 тренировки в неделю)\n" +
+                "• `/activity 3` — Большая (более 2 тренировок в неделю)", "Markdown", keyboard);
     }
 }

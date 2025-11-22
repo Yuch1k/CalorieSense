@@ -2,8 +2,10 @@ package ru.CalorieSense.command.user.profile;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 import ru.CalorieSense.ui.KeyboardFactory;
@@ -19,7 +21,7 @@ public class GoalCommand implements Command {
     }
 
     @Override
-    public void execute(Update update) throws Exception {
+    public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
         String text = update.getMessage().getText().trim();
 
@@ -27,14 +29,12 @@ public class GoalCommand implements Command {
 
         if (!isDirectCommand) {
             showGoalPrompt(chatId);
-            return;
         }
 
         String[] parts = text.split("\\s+", 2);
 
         if (parts.length < 2) {
             showGoalPrompt(chatId);
-            return;
         }
 
         String input = parts[1];
@@ -54,44 +54,32 @@ public class GoalCommand implements Command {
             goal = "gain";
             goalText = "Набор массы";
         } else {
-            sender.execute(SendMessage.builder()
-                    .chatId(String.valueOf(chatId))
-                    .text("❌ Некорректный выбор.\n\nВведите `/goal 1`, `/goal 2` или `/goal 3`")
-                    .parseMode("Markdown")
-                    .replyMarkup(KeyboardFactory.getEditParamsKeyboard())
-                    .build());
-            return;
+
+            ReplyKeyboard keyboard = KeyboardFactory.getEditParamsKeyboard();
+            return new BotResponse(chatId, "❌ Некорректный выбор.\n\nВведите `/goal 1`, `/goal 2` или `/goal 3`",
+                    "Markdown", keyboard);
         }
 
         UserProfile profile = repository.findByChatId(chatId);
         profile.setGoal(goal);
         repository.save(profile);
 
-        sender.execute(SendMessage.builder()
-                .chatId(String.valueOf(chatId))
-                .text("✅ Цель обновлена: *" + goalText + "*\n\n" +
-                        "Используйте '📊 Мои калории' для просмотра обновлённых расчётов.\n\n" +
-                        "Возврат в главное меню.")
-                .parseMode("Markdown")
-                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                .build());
+        ReplyKeyboard keyboard = KeyboardFactory.getMainKeyboard();
+        return new BotResponse(chatId, "✅ Цель обновлена: *" + goalText + "*\n\n" +
+                "Используйте '📊 Мои калории' для просмотра обновлённых расчётов.\n\n" +
+                "Возврат в главное меню.", "Markdown", keyboard);
     }
 
-    private void showGoalPrompt(Long chatId) throws Exception {
+    private BotResponse showGoalPrompt(Long chatId) throws Exception {
         UserProfile profile = repository.findByChatId(chatId);
         String currentGoal = getGoalText(profile.getGoal());
-
-        sender.execute(SendMessage.builder()
-                .chatId(String.valueOf(chatId))
-                .text("🎯 *Текущая цель:* " + currentGoal + "\n\n" +
-                        "Выберите новую цель:\n\n" +
-                        "Введите:\n" +
-                        "• `/goal 1` — Похудение (-15% калорий)\n" +
-                        "• `/goal 2` — Поддержание веса (базовый уровень)\n" +
-                        "• `/goal 3` — Набор массы (+15% калорий)")
-                .parseMode("Markdown")
-                .replyMarkup(KeyboardFactory.getEditParamsKeyboard())
-                .build());
+        ReplyKeyboard keyboard = KeyboardFactory.getEditParamsKeyboard();
+        return new BotResponse(chatId, "🎯 *Текущая цель:* " + currentGoal + "\n\n" +
+                "Выберите новую цель:\n\n" +
+                "Введите:\n" +
+                "• `/goal 1` — Похудение (-15% калорий)\n" +
+                "• `/goal 2` — Поддержание веса (базовый уровень)\n" +
+                "• `/goal 3` — Набор массы (+15% калорий)", "Markdown", keyboard);
     }
 
     private String getGoalText(String goal) {

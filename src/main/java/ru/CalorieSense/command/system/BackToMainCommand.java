@@ -2,8 +2,10 @@ package ru.CalorieSense.command.system;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.ui.KeyboardFactory;
 
 public class BackToMainCommand implements Command {
@@ -15,15 +17,9 @@ public class BackToMainCommand implements Command {
     }
 
     @Override
-    public void execute(Update update) throws Exception {
+    public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
-
-        SendMessage message = SendMessage.builder()
-                .chatId(String.valueOf(chatId))
-                .text("◀️ Возврат в главное меню")
-                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                .build();
-
-        sender.execute(message);
+        ReplyKeyboard keyboard = KeyboardFactory.getMainKeyboard();
+        return new BotResponse(chatId, ("◀️ Возврат в главное меню"), "Markdown", keyboard);
     }
 }

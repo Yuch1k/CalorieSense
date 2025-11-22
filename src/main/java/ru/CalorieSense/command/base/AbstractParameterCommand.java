@@ -39,7 +39,7 @@ public abstract class AbstractParameterCommand implements Command {
 
         if (!isDirectCommand || parts.length < 2) {
             sendPrompt(chatId);
-            return;
+
         }
 
         try {
