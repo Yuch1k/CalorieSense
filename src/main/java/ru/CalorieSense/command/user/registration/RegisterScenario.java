@@ -41,6 +41,7 @@ public class RegisterScenario implements Command {
                     int height = Integer.parseInt(text);
                     if (height >= 100 && height <= 250) {
                         profile.setHeight(height);
+                        repository.save(profile);
                         state.next();
                         stateMap.put(chatId, state);
                         return new BotResponse(chatId, "✅ Рост сохранён: " + height + " см\n\nТеперь введите ваш вес в килограммах:", "Markdown", keyboard);
@@ -54,6 +55,7 @@ public class RegisterScenario implements Command {
                     double weight = Double.parseDouble(text);
                     if (weight >= 10 && weight <= 500) {
                         profile.setWeight(weight);
+                        repository.save(profile);
                         state.next();
                         stateMap.put(chatId, state);
                         return new BotResponse(chatId, "✅ Вес сохранён: " + weight + " кг\n\nВведите ваш возраст в годах:", "Markdown", keyboard);
@@ -67,6 +69,7 @@ public class RegisterScenario implements Command {
                     int age = Integer.parseInt(text);
                     if (age >= 10 && age <= 120) {
                         profile.setAge(age);
+                        repository.save(profile);
                         state.next();
                         stateMap.put(chatId, state);
                         return new BotResponse(chatId, "✅ Возраст сохранён: " + age + " лет\n\nВведите ваш пол (мужской/женский):", "Markdown", keyboard);
@@ -84,6 +87,7 @@ public class RegisterScenario implements Command {
                 };
                 if (!sex.isEmpty()) {
                     profile.setSex(sex);
+                    repository.save(profile);
                     state.next();
                     stateMap.put(chatId, state);
                     return new BotResponse(chatId,
@@ -114,6 +118,7 @@ public class RegisterScenario implements Command {
                             "Markdown", keyboard);
                 }
                 profile.setGoal(goal);
+                repository.save(profile);
                 state.next();
                 stateMap.put(chatId, state);
                 return new BotResponse(chatId,
