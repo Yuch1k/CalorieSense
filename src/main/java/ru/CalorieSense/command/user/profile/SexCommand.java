@@ -7,12 +7,12 @@ import ru.CalorieSense.repository.UserRepository;
 
 public class SexCommand extends AbstractParameterCommand {
 
-    public SexCommand(BotApp sender, UserRepository repository) {
-        super(sender, repository, "/sex", "пол");
+    public SexCommand(UserRepository repository) {
+        super(repository, "/sex", "пол");
     }
 
     @Override
-    protected void applyValue(UserProfile profile, String value) throws Exception {
+    public void applyValue(UserProfile profile, String value) throws Exception {
         String normalized = value.trim().toUpperCase();
         if (!normalized.equals("М") && !normalized.equals("Ж")) {
             throw new IllegalArgumentException("Введите М или Ж");
@@ -21,12 +21,12 @@ public class SexCommand extends AbstractParameterCommand {
     }
 
     @Override
-    protected String getExampleValue() {
+    public String getExampleValue() {
         return "М";
     }
 
     @Override
-    protected String getPromptMessage() {
+    public String getPromptMessage() {
         return "👤 Введите ваш пол:\n\n" +
                 "Формат: `/sex <М или Ж>`\n\n" +
                 "Например: `/sex М`";

@@ -17,12 +17,10 @@ import java.util.Map;
 
 public class ManualInputCommand implements Command {
 
-    private final BotApp sender;
     private final MealRepository mealRepository;
     private final Map<Long, MealInputState> stateMap = new HashMap<>();
 
-    public ManualInputCommand(BotApp sender, MealRepository mealRepository) {
-        this.sender = sender;
+    public ManualInputCommand(MealRepository mealRepository) {
         this.mealRepository = mealRepository;
     }
 
@@ -38,7 +36,6 @@ public class ManualInputCommand implements Command {
                 return new BotResponse(chatId,
                         ("✍️ *Ручной ввод приёма пищи*\n\n" + "Введите количество калорий:"),
                         "Markdown", keyboard);
-                state.next();
             }
 
             case CALORIES -> {
@@ -51,7 +48,6 @@ public class ManualInputCommand implements Command {
                                         "Теперь введите количество белков (в граммах):"),
                                 "Markdown", keyboard);
 
-                        state.next();
                     } else {
                         return new BotResponse(chatId,
                                 ("❌ Калории должны быть от 1 до 10000. Попробуйте ещё раз:"),
@@ -74,7 +70,6 @@ public class ManualInputCommand implements Command {
                                 ("✅ Белки: " + protein + " г\n\n" +
                                         "Теперь введите количество жиров (в граммах):"),
                                 "Markdown", keyboard);
-                        state.next();
                     } else {
                         return new BotResponse(chatId,
                                 ("❌ Белки должны быть от 0 до 1000 г. Попробуйте ещё раз:"),
@@ -96,7 +91,6 @@ public class ManualInputCommand implements Command {
                                 ("✅ Жиры: " + fats + " г\n\n" +
                                         "Наконец, введите количество углеводов (в граммах):"),
                                 "Markdown", keyboard);
-                        state.next();
                     } else {
 
                         return new BotResponse(chatId,
@@ -114,7 +108,6 @@ public class ManualInputCommand implements Command {
                 if (text.matches("\\d+")) {
                     int carbs = Integer.parseInt(text);
                     if (carbs >= 0 && carbs <= 1000) {
-                        // Сохраняем приём пищи
                         Long mealId = mealRepository.generateId();
                         Meal meal = new Meal(
                                 mealId,
@@ -136,9 +129,6 @@ public class ManualInputCommand implements Command {
                                 "Используйте '📊 Мои калории' для просмотра прогресса за день.");
                         return new BotResponse(chatId, msg, "Markdown", keyboard1);
 
-                        state.reset();
-                        stateMap.remove(chatId);
-
                     } else {
                         return new BotResponse(chatId,
                                 ("❌ Углеводы должны быть от 0 до 1000 г. Попробуйте ещё раз:"),
@@ -149,10 +139,15 @@ public class ManualInputCommand implements Command {
                             ("❌ Введите число (например: 50)"),
                             "Markdown", keyboard);
                 }
+
+            }
+            default -> {
+                state.reset();
+                stateMap.remove(chatId);
+                return new BotResponse(chatId,
+                        "Произошла ошибка. Давайте начнем сначала.\n\nВведите количество калорий:",
+                        "Markdown", keyboard);
             }
         }
-
-        stateMap.put(chatId, state);
-        return
     }
 }

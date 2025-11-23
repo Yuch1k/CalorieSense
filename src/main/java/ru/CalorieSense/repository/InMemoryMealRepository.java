@@ -38,9 +38,6 @@ public class InMemoryMealRepository implements MealRepository {
         storage.remove(mealId);
     }
 
-    /**
-     * Генерирует уникальный ID для нового приёма пищи
-     */
     public Long generateId() {
         return idGenerator.getAndIncrement();
     }

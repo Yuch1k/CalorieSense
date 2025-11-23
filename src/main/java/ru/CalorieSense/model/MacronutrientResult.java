@@ -1,13 +1,10 @@
 package ru.CalorieSense.model;
 
-/**
- * Результат расчёта макронутриентов (БЖУ)
- */
 public class MacronutrientResult {
     private final int calories;
-    private final int protein;  // белки в граммах
-    private final int fats;     // жиры в граммах
-    private final int carbs;    // углеводы в граммах
+    private final int protein;
+    private final int fats;
+    private final int carbs;
 
     public MacronutrientResult(int calories, int protein, int fats, int carbs) {
         this.calories = calories;
@@ -19,15 +16,12 @@ public class MacronutrientResult {
     public int getCalories() {
         return calories;
     }
-
     public int getProtein() {
         return protein;
     }
-
     public int getFats() {
         return fats;
     }
-
     public int getCarbs() {
         return carbs;
     }

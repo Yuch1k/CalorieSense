@@ -9,15 +9,11 @@ public interface MealRepository {
 
     Long generateId();
 
-     // Добавить приём пищи
     void addMeal(Meal meal);
 
-     // Получить все приёмы пищи пользователя за определённую дату
     List<Meal> getMealsByDate(Long chatId, LocalDate date);
 
-     // Получить все приёмы пищи пользователя за сегодня
     List<Meal> getTodayMeals(Long chatId);
 
-     // Удалить приём пищи по ID
     void deleteMeal(Long mealId);
 }

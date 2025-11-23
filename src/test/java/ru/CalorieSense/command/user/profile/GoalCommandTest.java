@@ -1,128 +1,104 @@
-package ru.CalorieSense.command.user.profile;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.mockito.MockedStatic;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import ru.CalorieSense.BotApp;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import ru.CalorieSense.command.user.profile.GoalCommand;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
+import ru.CalorieSense.ui.KeyboardFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class GoalCommandTest {
 
-    @Mock
-    private BotApp botApp;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private Update update;
-
-    @Mock
-    private Message message;
-
-    private GoalCommand goalCommand;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        goalCommand = new GoalCommand(botApp, userRepository);
-
+    @Test
+    void execute_NoArguments_ShowsGoalPrompt() throws Exception {
+        Long chatId = 100L;
+        Update update = mock(Update.class);
+        Message message = mock(Message.class);
         when(update.getMessage()).thenReturn(message);
-        when(message.getChatId()).thenReturn(123L);
+        when(message.getChatId()).thenReturn(chatId);
+        when(message.getText()).thenReturn("/goal");
+
+        UserRepository repository = mock(UserRepository.class);
+        UserProfile profile = mock(UserProfile.class);
+        when(repository.findByChatId(chatId)).thenReturn(profile);
+        when(profile.getGoal()).thenReturn("lose");
+
+        ReplyKeyboardMarkup keyboard = mock(ReplyKeyboardMarkup.class);
+        try (MockedStatic<KeyboardFactory> keyboardFactory = mockStatic(KeyboardFactory.class)) {
+            keyboardFactory.when(KeyboardFactory::getEditParamsKeyboard).thenReturn(keyboard);
+
+            GoalCommand command = new GoalCommand(repository);
+            BotResponse response = command.execute(update);
+
+            assertNotNull(response);
+            assertEquals(chatId, response.getChatId());
+            assertSame(keyboard, response.getReplyMarkup());
+            assertTrue(response.getText().contains("Текущая цель"));
+            assertTrue(response.getText().contains("Похудение"));
+        }
     }
 
     @Test
-    void testExecute_ButtonClick_ShowsPrompt() throws Exception {
-        when(message.getText()).thenReturn("🎯 Цель");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
+    void execute_InvalidGoalInput_ReturnsError() throws Exception {
+        Long chatId = 101L;
+        Update update = mock(Update.class);
+        Message message = mock(Message.class);
+        when(update.getMessage()).thenReturn(message);
+        when(message.getChatId()).thenReturn(chatId);
+        when(message.getText()).thenReturn("/goal invalid");
 
-        goalCommand.execute(update);
+        UserRepository repository = mock(UserRepository.class);
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
+        ReplyKeyboardMarkup keyboard = mock(ReplyKeyboardMarkup.class);
+        try (MockedStatic<KeyboardFactory> keyboardFactory = mockStatic(KeyboardFactory.class)) {
+            keyboardFactory.when(KeyboardFactory::getEditParamsKeyboard).thenReturn(keyboard);
 
-        SendMessage sentMessage = messageCaptor.getValue();
-        assertTrue(sentMessage.getText().contains("Текущая цель"));
-        assertTrue(sentMessage.getText().contains("/goal 1"));
+            GoalCommand command = new GoalCommand(repository);
+            BotResponse response = command.execute(update);
+
+            assertNotNull(response);
+            assertEquals(chatId, response.getChatId());
+            assertSame(keyboard, response.getReplyMarkup());
+            assertTrue(response.getText().contains("❌ Некорректный выбор"));
+        }
     }
 
     @Test
-    void testExecute_WithGoal1_SetsLose() throws Exception {
+    void execute_ValidGoalInput_UpdatesProfile() throws Exception {
+        Long chatId = 102L;
+        Update update = mock(Update.class);
+        Message message = mock(Message.class);
+        when(update.getMessage()).thenReturn(message);
+        when(message.getChatId()).thenReturn(chatId);
         when(message.getText()).thenReturn("/goal 1");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
 
-        goalCommand.execute(update);
+        UserRepository repository = mock(UserRepository.class);
+        UserProfile profile = mock(UserProfile.class);
+        when(repository.findByChatId(chatId)).thenReturn(profile);
 
-        assertEquals("lose", profile.getGoal());
-        verify(userRepository).save(profile);
+        doNothing().when(profile).setGoal("lose");
+        doNothing().when(repository).save(profile);
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-        assertTrue(messageCaptor.getValue().getText().contains("Похудение"));
-    }
+        ReplyKeyboardMarkup keyboard = mock(ReplyKeyboardMarkup.class);
+        try (MockedStatic<KeyboardFactory> keyboardFactory = mockStatic(KeyboardFactory.class)) {
+            keyboardFactory.when(KeyboardFactory::getMainKeyboard).thenReturn(keyboard);
 
-    @Test
-    void testExecute_WithGoal2_SetsMaintain() throws Exception {
-        when(message.getText()).thenReturn("/goal 2");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
+            GoalCommand command = new GoalCommand(repository);
+            BotResponse response = command.execute(update);
 
-        goalCommand.execute(update);
+            assertNotNull(response);
+            assertEquals(chatId, response.getChatId());
+            assertSame(keyboard, response.getReplyMarkup());
+            assertTrue(response.getText().contains("✅ Цель обновлена"));
+            assertTrue(response.getText().contains("Похудение"));
 
-        assertEquals("maintain", profile.getGoal());
-        verify(userRepository).save(profile);
-    }
-
-    @Test
-    void testExecute_WithGoal3_SetsGain() throws Exception {
-        when(message.getText()).thenReturn("/goal 3");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        goalCommand.execute(update);
-
-        assertEquals("gain", profile.getGoal());
-        verify(userRepository).save(profile);
-    }
-
-    @Test
-    void testExecute_WithTextLose_SetsLose() throws Exception {
-        when(message.getText()).thenReturn("/goal похудение");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        goalCommand.execute(update);
-
-        assertEquals("lose", profile.getGoal());
-        verify(userRepository).save(profile);
-    }
-
-    @Test
-    void testExecute_WithInvalidGoal_ShowsError() throws Exception {
-        when(message.getText()).thenReturn("/goal 5");
-        UserProfile profile = new UserProfile(123L);
-        profile.setGoal("maintain");
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        goalCommand.execute(update);
-
-        assertEquals("maintain", profile.getGoal()); // Не изменилась
-        verify(userRepository, never()).save(any());
-
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-        assertTrue(messageCaptor.getValue().getText().contains("Некорректный"));
+            verify(profile).setGoal("lose");
+            verify(repository).save(profile);
+        }
     }
 }

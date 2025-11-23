@@ -22,7 +22,6 @@ import java.util.Map;
  */
 public class RegisterScenario implements Command {
 
-    private final BotApp sender;
     private final UserRepository repository;
     private final Map<Long, DialogState> stateMap = new HashMap<>();
 
@@ -34,8 +33,7 @@ public class RegisterScenario implements Command {
         };
     }
 
-    public RegisterScenario(BotApp sender, UserRepository repository) {
-        this.sender = sender;
+    public RegisterScenario(UserRepository repository) {
         this.repository = repository;
     }
 
@@ -52,7 +50,6 @@ public class RegisterScenario implements Command {
                         "📝 *Регистрация профиля*\n\nВведите ваш рост в сантиметрах:",
                         "Markdown",
                         keyboard);
-                state.next();
             }
 
             case HEIGHT -> {
@@ -60,25 +57,21 @@ public class RegisterScenario implements Command {
                     int height = Integer.parseInt(text);
                     if (height >= 100 && height <= 250) {
                         profile.setHeight(height);
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("✅ Рост сохранён: " + height + " см\n\nТеперь введите ваш вес в килограммах:")
-                                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                                .build());
-                        state.next();
+                        return new BotResponse(chatId,
+                                "✅ Рост сохранён: " + height + " см\n\nТеперь введите ваш вес в килограммах:",
+                                "Markdown",
+                                keyboard);
                     } else {
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("❌ Рост должен быть от 100 до 250 см. Попробуйте ещё раз:")
-                                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                                .build());
+                        return new BotResponse(chatId,
+                                "❌ Рост должен быть от 100 до 250 см. Попробуйте ещё раз:",
+                                "Markdown",
+                                keyboard);
                     }
                 } else {
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("❌ Некорректный ввод. Введите число (например: 175):")
-                            .replyMarkup(KeyboardFactory.getMainKeyboard())
-                            .build());
+                    return new BotResponse(chatId,
+                            "❌ Некорректный ввод. Введите число (например: 175):",
+                            "Markdown",
+                            keyboard);
                 }
             }
 
@@ -87,25 +80,21 @@ public class RegisterScenario implements Command {
                     double weight = Double.parseDouble(text);
                     if (weight >= 10 && weight <= 500) {
                         profile.setWeight(weight);
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("✅ Вес сохранён: " + weight + " кг\n\nВведите ваш возраст в годах:")
-                                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                                .build());
-                        state.next();
+                        return new BotResponse(chatId,
+                                "✅ Вес сохранён: " + weight + " кг\n\nВведите ваш возраст в годах:",
+                                "Markdown",
+                                keyboard);
                     } else {
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("❌ Вес должен быть от 10 до 500 кг. Попробуйте ещё раз:")
-                                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                                .build());
+                        return new BotResponse(chatId,
+                                "❌ Вес должен быть от 10 до 500 кг. Попробуйте ещё раз:",
+                                "Markdown",
+                                keyboard);
                     }
                 } else {
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("❌ Некорректный ввод. Введите число (например: 72.5):")
-                            .replyMarkup(KeyboardFactory.getMainKeyboard())
-                            .build());
+                    return new BotResponse(chatId,
+                            "❌ Некорректный ввод. Введите число (например: 72.5):",
+                            "Markdown",
+                            keyboard);
                 }
             }
 
@@ -114,49 +103,41 @@ public class RegisterScenario implements Command {
                     int age = Integer.parseInt(text);
                     if (age >= 10 && age <= 120) {
                         profile.setAge(age);
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("✅ Возраст сохранён: " + age + " лет\n\nВведите ваш пол (М/Ж):")
-                                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                                .build());
-                        state.next();
+                        return new BotResponse(chatId,
+                                "✅ Возраст сохранён: " + age + " лет\n\nВведите ваш пол (М/Ж):",
+                                "Markdown",
+                                keyboard);
                     } else {
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("❌ Возраст должен быть от 10 до 120 лет. Попробуйте ещё раз:")
-                                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                                .build());
+                        return new BotResponse(chatId,
+                                "❌ Возраст должен быть от 10 до 120 лет. Попробуйте ещё раз:",
+                                "Markdown",
+                                keyboard);
                     }
                 } else {
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("❌ Некорректный ввод. Введите число (например: 30):")
-                            .replyMarkup(KeyboardFactory.getMainKeyboard())
-                            .build());
+                    return new BotResponse(chatId,
+                            "❌ Некорректный ввод. Введите число (например: 30):",
+                            "Markdown",
+                            keyboard);
                 }
             }
 
             case GENDER -> {
                 if (text.equalsIgnoreCase("М") || text.equalsIgnoreCase("Ж")) {
                     profile.setSex(text.toUpperCase());
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("✅ Пол сохранён: " + text.toUpperCase() + "\n\n" +
+                    return new BotResponse(chatId,
+                            "✅ Пол сохранён: " + text.toUpperCase() + "\n\n" +
                                     "🎯 *Выберите вашу цель:*\n\n" +
                                     "Введите:\n" +
                                     "• *1* — Похудение (дефицит калорий -15%)\n" +
                                     "• *2* — Поддержание веса (базовый уровень)\n" +
-                                    "• *3* — Набор массы (профицит калорий +15%)")
-                            .parseMode("Markdown")
-                            .replyMarkup(KeyboardFactory.getMainKeyboard())
-                            .build());
-                    state.next();
+                                    "• *3* — Набор массы (профицит калорий +15%)",
+                            "Markdown",
+                            keyboard);
                 } else {
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("❌ Некорректный ввод. Введите 'М' или 'Ж':")
-                            .replyMarkup(KeyboardFactory.getMainKeyboard())
-                            .build());
+                    return new BotResponse(chatId,
+                            "❌ Некорректный ввод. Введите 'М' или 'Ж':",
+                            "Markdown",
+                            keyboard);
                 }
             }
 
@@ -174,29 +155,24 @@ public class RegisterScenario implements Command {
                     goal = "gain";
                     goalText = "Набор массы";
                 } else {
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("❌ Некорректный ввод. Введите 1, 2 или 3:")
-                            .replyMarkup(KeyboardFactory.getMainKeyboard())
-                            .build());
-                    return;
+                    return new BotResponse(chatId,
+                            "❌ Некорректный ввод. Введите 1, 2 или 3:",
+                            "Markdown",
+                            keyboard);
                 }
 
                 profile.setGoal(goal);
-
-                sender.execute(SendMessage.builder()
-                        .chatId(chatId.toString())
-                        .text("✅ Цель сохранена: *" + goalText + "*\n\n" +
+                state.next();
+                stateMap.put(chatId, state);
+                return new BotResponse(chatId,
+                        "✅ Цель сохранена: *" + goalText + "*\n\n" +
                                 "💪 *Выберите уровень физической активности:*\n\n" +
                                 "Введите:\n" +
                                 "• *1* — Малая активность (без тренировок, сидячая работа)\n" +
                                 "• *2* — Средняя активность (1-2 тренировки в неделю)\n" +
-                                "• *3* — Большая активность (более 2 тренировок в неделю)")
-                        .parseMode("Markdown")
-                        .replyMarkup(KeyboardFactory.getMainKeyboard())
-                        .build());
-
-                state.next();
+                                "• *3* — Большая активность (более 2 тренировок в неделю)",
+                        "Markdown",
+                        keyboard);
             }
             case ACTIVITY -> {
                 String activity;
@@ -215,12 +191,10 @@ public class RegisterScenario implements Command {
                     activity = "high";
                     activityText = "Большая активность (более 2 тренировок в неделю)";
                 } else {
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("❌ Некорректный ввод. Введите 1, 2 или 3:")
-                            .replyMarkup(KeyboardFactory.getMainKeyboard())
-                            .build());
-                    return;
+                    return new BotResponse(chatId,
+                            "❌ Некорректный ввод. Введите 1, 2 или 3:",
+                            "Markdown",
+                            keyboard);
                 }
 
                 profile.setActivityLevel(activity);
@@ -229,18 +203,15 @@ public class RegisterScenario implements Command {
                 UserProfileFormatter formatter = new UserProfileFormatter(new CalorieCalculatorService());
                 String completionMessage = formatter.formatCompletionMessage(profile);
 
-                sender.execute(SendMessage.builder()
-                        .chatId(chatId.toString())
-                        .text(completionMessage)
-                        .parseMode("Markdown")
-                        .replyMarkup(KeyboardFactory.getMainKeyboard())
-                        .build());
-
                 state.reset();
                 stateMap.remove(chatId);
-                return;
+                return new BotResponse(chatId,
+                        completionMessage,
+                        "Markdown",
+                        keyboard);
             }
         }
         stateMap.put(chatId, state);
+        return new BotResponse(chatId, "Пожалуйста, введите корректные данные.", "Markdown", keyboard);
     }
 }

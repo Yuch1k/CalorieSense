@@ -7,12 +7,12 @@ import ru.CalorieSense.repository.UserRepository;
 
 public class AgeCommand extends AbstractParameterCommand {
 
-    public AgeCommand(BotApp sender, UserRepository repository) {
-        super(sender, repository, "/age", "возраст");
+    public AgeCommand(UserRepository repository) {
+        super(repository, "/age", "возраст");
     }
 
     @Override
-    protected void applyValue(UserProfile profile, String value) throws Exception {
+    public void applyValue(UserProfile profile, String value) throws Exception {
         int age = Integer.parseInt(value);
         if (age < 10 || age > 120) {
             throw new IllegalArgumentException("Некорректный возраст (допустимо: 10-120 лет)");
@@ -21,12 +21,12 @@ public class AgeCommand extends AbstractParameterCommand {
     }
 
     @Override
-    protected String getExampleValue() {
+    public String getExampleValue() {
         return "25";
     }
 
     @Override
-    protected String getPromptMessage() {
+    public String getPromptMessage() {
         return "🎂 Введите ваш возраст в годах:\n\n" +
                 "Формат: `/age <значение>`\n\n" +
                 "Например: `/age 25`\n\n" +

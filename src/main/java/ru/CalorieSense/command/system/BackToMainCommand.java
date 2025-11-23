@@ -9,13 +9,6 @@ import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.ui.KeyboardFactory;
 
 public class BackToMainCommand implements Command {
-
-    private final BotApp sender;
-
-    public BackToMainCommand(BotApp sender) {
-        this.sender = sender;
-    }
-
     @Override
     public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();

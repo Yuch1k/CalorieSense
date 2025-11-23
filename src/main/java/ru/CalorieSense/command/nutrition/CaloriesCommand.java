@@ -62,13 +62,13 @@ public class CaloriesCommand implements Command {
 
         String statusEmoji;
         if (percentage < 50) {
-            statusEmoji = "🟢"; // Можно еще много съесть
+            statusEmoji = "🟢";
         } else if (percentage < 90) {
-            statusEmoji = "🟡"; // Близко к цели
+            statusEmoji = "🟡";
         } else if (percentage <= 110) {
-            statusEmoji = "✅"; // В пределах нормы
+            statusEmoji = "✅";
         } else {
-            statusEmoji = "🔴"; // Перебор
+            statusEmoji = "🔴";
         }
 
         return statusEmoji + " *Ваш прогресс за сегодня:*\n\n" +
@@ -94,9 +94,7 @@ public class CaloriesCommand implements Command {
                 "• Активность: " + activityText;
     }
 
-    /**
-     * Создаёт визуальную полосу прогресса
-     */
+
     private String createProgressBar(double percentage) {
         int filled = (int) (percentage / 10);
         filled = Math.min(filled, 10); // Максимум 10 блоков

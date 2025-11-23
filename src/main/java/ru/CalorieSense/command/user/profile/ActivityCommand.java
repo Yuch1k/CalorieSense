@@ -13,13 +13,11 @@ import ru.CalorieSense.ui.KeyboardFactory;
 
 public class ActivityCommand implements Command {
 
-    private final BotApp sender;
     private final UserRepository repository;
     private final CalorieCalculatorService calculator;
 
-    public ActivityCommand(BotApp sender, UserRepository repository,
+    public ActivityCommand(UserRepository repository,
                            CalorieCalculatorService calculator) {
-        this.sender = sender;
         this.repository = repository;
         this.calculator = calculator;
     }
@@ -32,17 +30,14 @@ public class ActivityCommand implements Command {
         boolean isDirectCommand = text.toLowerCase().startsWith("/activity");
 
         if (!isDirectCommand) {
-            showActivityPrompt(chatId);
-
+            return showActivityPrompt(chatId);
         }
 
         String[] parts = text.split("\\s+", 2);
 
         if (parts.length < 2) {
-            showActivityPrompt(chatId);
-
+            return showActivityPrompt(chatId);
         }
-
         String input = parts[1];
         String activity;
         String activityText;

@@ -12,11 +12,9 @@ import ru.CalorieSense.ui.KeyboardFactory;
 
 public class GoalCommand implements Command {
 
-    private final BotApp sender;
     private final UserRepository repository;
 
-    public GoalCommand(BotApp sender, UserRepository repository) {
-        this.sender = sender;
+    public GoalCommand(UserRepository repository) {
         this.repository = repository;
     }
 
@@ -28,13 +26,13 @@ public class GoalCommand implements Command {
         boolean isDirectCommand = text.toLowerCase().startsWith("/goal");
 
         if (!isDirectCommand) {
-            showGoalPrompt(chatId);
+            return showGoalPrompt(chatId);
         }
 
         String[] parts = text.split("\\s+", 2);
 
         if (parts.length < 2) {
-            showGoalPrompt(chatId);
+            return showGoalPrompt(chatId);
         }
 
         String input = parts[1];

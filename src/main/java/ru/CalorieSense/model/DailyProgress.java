@@ -24,7 +24,6 @@ public class DailyProgress {
         this.targetCarbs = targetCarbs;
     }
 
-    // Геттеры
     public int getConsumedCalories() { return consumedCalories; }
     public int getConsumedProtein() { return consumedProtein; }
     public int getConsumedFats() { return consumedFats; }

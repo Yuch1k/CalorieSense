@@ -8,9 +8,6 @@ import java.util.List;
 
 public class KeyboardFactory {
 
-    /**
-     * Главное меню бота
-     */
     public static ReplyKeyboardMarkup getMainKeyboard() {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         markup.setResizeKeyboard(true);
@@ -38,9 +35,6 @@ public class KeyboardFactory {
         return markup;
     }
 
-    /**
-     * Меню редактирования параметров профиля
-     */
     public static ReplyKeyboardMarkup getEditParamsKeyboard() {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         markup.setResizeKeyboard(true);
@@ -73,9 +67,6 @@ public class KeyboardFactory {
         return markup;
     }
 
-    /**
-     * Меню добавления приёма пищи
-     */
     public static ReplyKeyboardMarkup getMealInputKeyboard() {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         markup.setResizeKeyboard(true);

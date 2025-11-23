@@ -7,12 +7,12 @@ import ru.CalorieSense.repository.UserRepository;
 
 public class WeightCommand extends AbstractParameterCommand {
 
-    public WeightCommand(BotApp sender, UserRepository repository) {
-        super(sender, repository, "/weight", "вес");
+    public WeightCommand(UserRepository repository) {
+        super(repository, "/weight", "вес");
     }
 
     @Override
-    protected void applyValue(UserProfile profile, String value) throws Exception {
+    public void applyValue(UserProfile profile, String value) throws Exception {
         double weight = Double.parseDouble(value);
         if (weight <= 10 || weight > 500) {
             throw new IllegalArgumentException("Некорректный вес (допустимо: 10-500 кг)");
@@ -21,12 +21,12 @@ public class WeightCommand extends AbstractParameterCommand {
     }
 
     @Override
-    protected String getExampleValue() {
+    public String getExampleValue() {
         return "75";
     }
 
     @Override
-    protected String getPromptMessage() {
+    public String getPromptMessage() {
         return "⚖️ Введите ваш вес в килограммах:\n\n" +
                 "Формат: `/weight <значение>`\n\n" +
                 "Например: `/weight 75`\n\n" +

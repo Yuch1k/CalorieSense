@@ -12,14 +12,12 @@ import ru.CalorieSense.ui.KeyboardFactory;
 
 public abstract class AbstractParameterCommand implements Command {
 
-    protected final BotApp sender;
     protected final UserRepository repository;
     private final String commandName;
     private final String paramName;
 
-    protected AbstractParameterCommand(BotApp sender, UserRepository repository,
+    protected AbstractParameterCommand(UserRepository repository,
                                        String commandName, String paramName) {
-        this.sender = sender;
         this.repository = repository;
         this.commandName = commandName;
         this.paramName = paramName;

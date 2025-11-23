@@ -1,49 +1,40 @@
-package ru.CalorieSense.command.system;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.MockedStatic;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import ru.CalorieSense.BotApp;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import ru.CalorieSense.command.system.StartCommand;
 import ru.CalorieSense.messaging.BotResponse;
+import ru.CalorieSense.ui.KeyboardFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class StartCommandTest {
 
-    @Mock
-    private BotApp botApp;
-
-    @Mock
-    private Update update;
-
-    @Mock
-    private Message message;
-
-    private StartCommand startCommand;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        startCommand = new StartCommand(botApp);
-
-        when(update.getMessage()).thenReturn(message);
-        when(message.getChatId()).thenReturn(123L);
-        when(message.getText()).thenReturn("/start");
-    }
-
     @Test
-    void testExecute_ReturnsWelcomeResponse() throws Exception {
-        BotResponse response = startCommand.execute(update);
+    void execute_ReturnsWelcomeMessageAndMainKeyboard() throws Exception {
+        Long chatId = 123L;
+        Update update = mock(Update.class);
+        Message message = mock(Message.class);
+        when(update.getMessage()).thenReturn(message);
+        when(message.getChatId()).thenReturn(chatId);
 
-        assertNotNull(response);
-        assertEquals(123L, response.getChatId());
-        String text = response.getText();
-        assertTrue(text.contains("Добро пожаловать") || text.contains("Привет"));
-        assertEquals("Markdown", response.getParseMode());
-        assertNotNull(response.getReplyMarkup());
+        ReplyKeyboardMarkup mockKeyboard = mock(ReplyKeyboardMarkup.class);
+        try (MockedStatic<KeyboardFactory> keyboardFactoryMock = mockStatic(KeyboardFactory.class)) {
+            keyboardFactoryMock.when(KeyboardFactory::getMainKeyboard).thenReturn(mockKeyboard);
+
+            StartCommand command = new StartCommand();
+
+            // Act
+            BotResponse response = command.execute(update);
+
+            // Assert
+            assertNotNull(response);
+            assertEquals(chatId, response.getChatId());
+            assertEquals("Markdown", response.getParseMode());
+            assertSame(mockKeyboard, response.getReplyMarkup());
+            assertTrue(response.getText().contains("Добро пожаловать в CalorieSense"));
+        }
     }
 }

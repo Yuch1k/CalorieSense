@@ -105,7 +105,7 @@ public class JdbcMealRepository implements MealRepository {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setLong(1, id);
-            ps.executeUpdate(); // если строки нет — просто 0, без исключений
+            ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при удалении приёма пищи " + id, e);
         }

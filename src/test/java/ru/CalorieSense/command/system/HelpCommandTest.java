@@ -1,60 +1,39 @@
-package ru.CalorieSense.command.system;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.mockito.MockedStatic;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import ru.CalorieSense.BotApp;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import ru.CalorieSense.command.system.HelpCommand;
+import ru.CalorieSense.messaging.BotResponse;
+import ru.CalorieSense.ui.KeyboardFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class HelpCommandTest {
 
-    @Mock
-    private BotApp botApp;
-
-    @Mock
-    private Update update;
-
-    @Mock
-    private Message message;
-
-    private HelpCommand helpCommand;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        helpCommand = new HelpCommand(botApp);
-
+    @Test
+    void execute_ReturnsHelpMessageWithKeyboard() throws Exception {
+        Long chatId = 123L;
+        Update update = mock(Update.class);
+        Message message = mock(Message.class);
         when(update.getMessage()).thenReturn(message);
-        when(message.getChatId()).thenReturn(123L);
-    }
+        when(message.getChatId()).thenReturn(chatId);
 
-    @Test
-    void testExecute_SendsHelpMessage() throws Exception {
-        helpCommand.execute(update);
+        ReplyKeyboardMarkup mockKeyboard = mock(ReplyKeyboardMarkup.class);
+        try (MockedStatic<KeyboardFactory> keyboardFactoryMock = mockStatic(KeyboardFactory.class)) {
+            keyboardFactoryMock.when(KeyboardFactory::getMainKeyboard).thenReturn(mockKeyboard);
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
+            HelpCommand helpCommand = new HelpCommand();
 
-        SendMessage sentMessage = messageCaptor.getValue();
-        assertTrue(sentMessage.getText().contains("команд") ||
-                sentMessage.getText().contains("Помощь"));
-        assertEquals("Markdown", sentMessage.getParseMode());
-    }
+            BotResponse response = helpCommand.execute(update);
 
-    @Test
-    void testExecute_ContainsKeyboardMarkup() throws Exception {
-        helpCommand.execute(update);
-
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-
-        assertNotNull(messageCaptor.getValue().getReplyMarkup());
+            assertNotNull(response);
+            assertEquals(chatId, response.getChatId());
+            assertEquals("Markdown", response.getParseMode());
+            assertSame(mockKeyboard, response.getReplyMarkup());
+            assertTrue(response.getText().toLowerCase().contains("помощь")
+                    || response.getText().toLowerCase().contains("команд"));
+        }
     }
 }

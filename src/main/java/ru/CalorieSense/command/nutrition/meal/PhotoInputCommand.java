@@ -9,13 +9,6 @@ import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.ui.KeyboardFactory;
 
 public class PhotoInputCommand implements Command {
-
-    private final BotApp sender;
-
-    public PhotoInputCommand(BotApp sender) {
-        this.sender = sender;
-    }
-
     @Override
     public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
@@ -25,7 +18,5 @@ public class PhotoInputCommand implements Command {
                 "и бот автоматически определит калорийность!");
         ReplyKeyboard keyboard = KeyboardFactory.getMealInputKeyboard();
         return new BotResponse(chatId, msg, "Markdown", keyboard);
-
-
     }
 }

@@ -70,26 +70,26 @@ public class BotApp extends TelegramLongPollingBot {
         MealTrackingService mealTracker = new MealTrackingService(mealRepository);
 
         // Системные команды
-        Command unknownCommand = new UnknownCommand(this);
-        Command startCommand = new StartCommand(this);
-        Command helpCommand = new HelpCommand(this);
-        Command backToMainCommand = new BackToMainCommand(this);
+        Command unknownCommand = new UnknownCommand();
+        Command startCommand = new StartCommand();
+        Command helpCommand = new HelpCommand();
+        Command backToMainCommand = new BackToMainCommand();
 
         // Команды пользователя
-        Command registerScenario = new RegisterScenario(this, userRepository);
-        Command editParamsCommand = new ProfileCommand(this, userRepository, calculator);
-        Command heightCommand = new HeightCommand(this, userRepository);
-        Command weightCommand = new WeightCommand(this, userRepository);
-        Command ageCommand = new AgeCommand(this, userRepository);
-        Command sexCommand = new SexCommand(this, userRepository);
-        Command goalCommand = new GoalCommand(this, userRepository);
-        Command activityCommand = new ActivityCommand(this, userRepository, calculator);
+        Command registerScenario = new RegisterScenario(userRepository);
+        Command editParamsCommand = new ProfileCommand(userRepository, calculator);
+        Command heightCommand = new HeightCommand(userRepository);
+        Command weightCommand = new WeightCommand(userRepository);
+        Command ageCommand = new AgeCommand(userRepository);
+        Command sexCommand = new SexCommand(userRepository);
+        Command goalCommand = new GoalCommand(userRepository);
+        Command activityCommand = new ActivityCommand(userRepository, calculator);
 
         // Команды питания
         Command caloriesCommand = new CaloriesCommand(this, userRepository, calculator, mealTracker);
-        Command addMealCommand = new AddMealCommand(this);
-        Command manualInputCommand = new ManualInputCommand(this, mealRepository);
-        Command photoInputCommand = new PhotoInputCommand(this);
+        Command addMealCommand = new AddMealCommand();
+        Command manualInputCommand = new ManualInputCommand(mealRepository);
+        Command photoInputCommand = new PhotoInputCommand();
 
         // Создаём sender
         MessageSender sender = new MessageSender(this);

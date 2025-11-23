@@ -10,13 +10,6 @@ import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.ui.KeyboardFactory;
 
 public class StartCommand implements Command {
-
-    private final AbsSender sender;
-
-    public StartCommand(AbsSender sender) {
-        this.sender = sender;
-    }
-
     @Override
     public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();

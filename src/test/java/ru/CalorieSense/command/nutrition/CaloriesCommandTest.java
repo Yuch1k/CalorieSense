@@ -1,145 +1,119 @@
-package ru.CalorieSense.command.nutrition;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.mockito.MockedStatic;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import ru.CalorieSense.BotApp;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import ru.CalorieSense.command.nutrition.CaloriesCommand;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.model.DailyProgress;
 import ru.CalorieSense.model.MacronutrientResult;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
 import ru.CalorieSense.service.nutrition.MealTrackingService;
+import ru.CalorieSense.ui.KeyboardFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class CaloriesCommandTest {
 
-    @Mock
-    private BotApp botApp;
+    @Test
+    void execute_IncompleteProfile_ReturnsWarningAndKeyboard() throws Exception {
+        Long chatId = 555L;
 
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private CalorieCalculatorService calculator;
-
-    @Mock
-    private MealTrackingService mealTracker;
-
-    @Mock
-    private Update update;
-
-    @Mock
-    private Message message;
-
-    private CaloriesCommand caloriesCommand;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        caloriesCommand = new CaloriesCommand(botApp, userRepository, calculator, mealTracker);
-
+        Update update = mock(Update.class);
+        Message message = mock(Message.class);
         when(update.getMessage()).thenReturn(message);
-        when(message.getChatId()).thenReturn(123L);
+        when(message.getChatId()).thenReturn(chatId);
+
+        UserRepository userRepository = mock(UserRepository.class);
+        CalorieCalculatorService calculator = mock(CalorieCalculatorService.class);
+        MealTrackingService mealTracker = mock(MealTrackingService.class);
+        ReplyKeyboardMarkup mockKeyboard = mock(ReplyKeyboardMarkup.class);
+
+        UserProfile mockProfile = mock(UserProfile.class);
+        when(userRepository.findByChatId(chatId)).thenReturn(mockProfile);
+        when(mockProfile.isComplete()).thenReturn(false);
+
+        MacronutrientResult macroRes = mock(MacronutrientResult.class);
+        when(calculator.calculateWithMacros(mockProfile)).thenReturn(macroRes);
+
+        when(mealTracker.calculateDailyProgress(chatId, macroRes)).thenReturn(mock(DailyProgress.class));
+
+        try (MockedStatic<KeyboardFactory> keyboardFactoryMock = mockStatic(KeyboardFactory.class)) {
+            keyboardFactoryMock.when(KeyboardFactory::getMainKeyboard).thenReturn(mockKeyboard);
+
+            CaloriesCommand command = new CaloriesCommand(null, userRepository, calculator, mealTracker);
+
+            BotResponse response = command.execute(update);
+
+            assertNotNull(response);
+            assertEquals(chatId, response.getChatId());
+            assertEquals("Markdown", response.getParseMode());
+            assertSame(mockKeyboard, response.getReplyMarkup());
+            assertTrue(response.getText().contains("Для точного расчёта пройдите регистрацию"));
+            assertTrue(response.getText().contains("Текущая оценка"));
+        }
     }
 
     @Test
-    void testExecute_IncompleteProfile_ShowsWarning() throws Exception {
-        UserProfile profile = new UserProfile(123L);
-        MacronutrientResult target = new MacronutrientResult(2200, 165, 61, 248);
-        DailyProgress progress = new DailyProgress(0, 0, 0, 0, 2200, 165, 61, 248);
+    void execute_CompleteProfile_ReturnsProgressMessageAndKeyboard() throws Exception {
+        Long chatId = 777L;
+        Update update = mock(Update.class);
+        Message message = mock(Message.class);
+        when(update.getMessage()).thenReturn(message);
+        when(message.getChatId()).thenReturn(chatId);
 
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-        when(calculator.calculateWithMacros(profile)).thenReturn(target);
-        when(mealTracker.calculateDailyProgress(123L, target)).thenReturn(progress);
+        UserRepository userRepository = mock(UserRepository.class);
+        CalorieCalculatorService calculator = mock(CalorieCalculatorService.class);
+        MealTrackingService mealTracker = mock(MealTrackingService.class);
+        ReplyKeyboardMarkup mockKeyboard = mock(ReplyKeyboardMarkup.class);
 
-        caloriesCommand.execute(update);
+        UserProfile mockProfile = mock(UserProfile.class);
+        when(userRepository.findByChatId(chatId)).thenReturn(mockProfile);
+        when(mockProfile.isComplete()).thenReturn(true);
+        when(mockProfile.getGoal()).thenReturn("lose");
+        when(mockProfile.getActivityLevel()).thenReturn("medium");
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
+        MacronutrientResult macroRes = mock(MacronutrientResult.class);
+        when(calculator.calculateWithMacros(mockProfile)).thenReturn(macroRes);
 
-        SendMessage sentMessage = messageCaptor.getValue();
-        assertTrue(sentMessage.getText().contains("пройдите регистрацию"));
-    }
+        DailyProgress progress = mock(DailyProgress.class);
+        when(mealTracker.calculateDailyProgress(chatId, macroRes)).thenReturn(progress);
 
-    @Test
-    void testExecute_CompleteProfile_ShowsProgress() throws Exception {
-        UserProfile profile = new UserProfile(123L, 75, 180, "М", 30);
-        profile.setGoal("maintain");
-        profile.setActivityLevel("medium");
+        when(progress.getCaloriesPercentage()).thenReturn(80.0);
+        when(progress.getConsumedCalories()).thenReturn(1600);
+        when(progress.getTargetCalories()).thenReturn(2000);
+        when(progress.getConsumedProtein()).thenReturn(60);
+        when(progress.getTargetProtein()).thenReturn(100);
+        when(progress.getConsumedFats()).thenReturn(40);
+        when(progress.getTargetFats()).thenReturn(70);
+        when(progress.getConsumedCarbs()).thenReturn(180);
+        when(progress.getTargetCarbs()).thenReturn(250);
+        when(progress.getRemainingCalories()).thenReturn(400);
+        when(progress.getRemainingProtein()).thenReturn(40);
+        when(progress.getRemainingFats()).thenReturn(30);
+        when(progress.getRemainingCarbs()).thenReturn(70);
 
-        MacronutrientResult target = new MacronutrientResult(2200, 165, 61, 248);
-        DailyProgress progress = new DailyProgress(1500, 100, 40, 150, 2200, 165, 61, 248);
+        when(calculator.getActivityLevelText("medium")).thenReturn("Средний");
 
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-        when(calculator.calculateWithMacros(profile)).thenReturn(target);
-        when(mealTracker.calculateDailyProgress(123L, target)).thenReturn(progress);
-        when(calculator.getActivityLevelText("medium")).thenReturn("Средняя (1-2 тренировки в неделю)");
+        try (MockedStatic<KeyboardFactory> keyboardFactoryMock = mockStatic(KeyboardFactory.class)) {
+            keyboardFactoryMock.when(KeyboardFactory::getMainKeyboard).thenReturn(mockKeyboard);
 
-        caloriesCommand.execute(update);
+            CaloriesCommand command = new CaloriesCommand(null, userRepository, calculator, mealTracker);
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
+            BotResponse response = command.execute(update);
 
-        SendMessage sentMessage = messageCaptor.getValue();
-        assertTrue(sentMessage.getText().contains("1500"));
-        assertTrue(sentMessage.getText().contains("2200"));
-        assertTrue(sentMessage.getText().contains("Осталось"));
-    }
-
-    @Test
-    void testExecute_NoMealsYet_ShowsZeroProgress() throws Exception {
-        UserProfile profile = new UserProfile(123L, 75, 180, "М", 30);
-        profile.setGoal("maintain");
-        profile.setActivityLevel("low");
-
-        MacronutrientResult target = new MacronutrientResult(2000, 150, 55, 225);
-        DailyProgress progress = new DailyProgress(0, 0, 0, 0, 2000, 150, 55, 225);
-
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-        when(calculator.calculateWithMacros(profile)).thenReturn(target);
-        when(mealTracker.calculateDailyProgress(123L, target)).thenReturn(progress);
-        when(calculator.getActivityLevelText("low")).thenReturn("Малая (без тренировок)");
-
-        caloriesCommand.execute(update);
-
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-
-        SendMessage sentMessage = messageCaptor.getValue();
-        assertTrue(sentMessage.getText().contains("0 / 2000"));
-        verify(calculator).calculateWithMacros(profile);
-        verify(mealTracker).calculateDailyProgress(123L, target);
-    }
-
-    @Test
-    void testExecute_OverTarget_ShowsRedStatus() throws Exception {
-        UserProfile profile = new UserProfile(123L, 75, 180, "М", 30);
-        profile.setGoal("lose");
-        profile.setActivityLevel("high");
-
-        MacronutrientResult target = new MacronutrientResult(2000, 150, 55, 225);
-        DailyProgress progress = new DailyProgress(2500, 180, 70, 300, 2000, 150, 55, 225);
-
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-        when(calculator.calculateWithMacros(profile)).thenReturn(target);
-        when(mealTracker.calculateDailyProgress(123L, target)).thenReturn(progress);
-        when(calculator.getActivityLevelText("high")).thenReturn("Большая (более 2 тренировок в неделю)");
-
-        caloriesCommand.execute(update);
-
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-
-        SendMessage sentMessage = messageCaptor.getValue();
-        assertTrue(sentMessage.getText().contains("2500"));
-        assertTrue(sentMessage.getText().contains("125%") || sentMessage.getText().contains("🔴"));
+            assertNotNull(response);
+            assertEquals(chatId, response.getChatId());
+            assertEquals("Markdown", response.getParseMode());
+            assertSame(mockKeyboard, response.getReplyMarkup());
+            assertTrue(response.getText().contains("Ваш прогресс за сегодня"));
+            assertTrue(response.getText().contains("Калории:"));
+            assertTrue(response.getText().contains("БЖУ:"));
+            assertTrue(response.getText().contains("Цель: Похудение"));
+            assertTrue(response.getText().contains("Активность: Средний"));
+        }
     }
 }

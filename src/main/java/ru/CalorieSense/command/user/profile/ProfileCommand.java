@@ -14,13 +14,11 @@ import ru.CalorieSense.ui.KeyboardFactory;
 
 public class ProfileCommand implements Command {
 
-    private final BotApp sender;
     private final UserRepository repository;
     private final UserProfileFormatter formatter;
 
-    public ProfileCommand(BotApp sender, UserRepository repository,
+    public ProfileCommand(UserRepository repository,
                           CalorieCalculatorService calculator) {
-        this.sender = sender;
         this.repository = repository;
         this.formatter = new UserProfileFormatter(calculator);
     }
