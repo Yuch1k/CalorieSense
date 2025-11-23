@@ -24,6 +24,13 @@
             <version>6.9.7.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.1</version>
+        </dependency>
+
+
         <!-- JUnit 5 (Jupiter) - ОБНОВЛЕНО -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

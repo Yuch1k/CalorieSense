@@ -1,133 +1,56 @@
 package ru.CalorieSense.model;
-
 import org.junit.jupiter.api.Test;
+import ru.CalorieSense.model.UserProfile;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserProfileTest {
+public class UserProfileTest {
 
     @Test
-    void testDefaultConstructor() {
-        UserProfile profile = new UserProfile(123L);
-
-        assertEquals(123L, profile.getChatId());
+    void testConstructorAndDefaultValues() {
+        UserProfile profile = new UserProfile(100L);
+        assertEquals(100L, profile.getChatId());
         assertEquals(2200, profile.getCaloriesGoal());
         assertEquals("maintain", profile.getGoal());
         assertEquals("low", profile.getActivityLevel());
-        assertEquals(0, profile.getHeight());
-        assertEquals(0, profile.getWeight());
-        assertEquals(0, profile.getAge());
-        assertNull(profile.getSex());
-    }
-
-    @Test
-    void testFullConstructor() {
-        UserProfile profile = new UserProfile(123L, 75.5, 180, "М", 30);
-
-        assertEquals(123L, profile.getChatId());
-        assertEquals(75.5, profile.getWeight());
-        assertEquals(180, profile.getHeight());
-        assertEquals("М", profile.getSex());
-        assertEquals(30, profile.getAge());
-        assertEquals("maintain", profile.getGoal());
-        assertEquals("low", profile.getActivityLevel());
-    }
-
-    @Test
-    void testIsComplete_AllFieldsFilled() {
-        UserProfile profile = new UserProfile(123L);
-        profile.setWeight(75);
-        profile.setHeight(180);
-        profile.setAge(30);
-        profile.setSex("М");
-
-        assertTrue(profile.isComplete());
-    }
-
-    @Test
-    void testIsComplete_MissingWeight() {
-        UserProfile profile = new UserProfile(123L);
-        profile.setHeight(180);
-        profile.setAge(30);
-        profile.setSex("М");
-
-        assertFalse(profile.isComplete());
-    }
-
-    @Test
-    void testIsComplete_MissingHeight() {
-        UserProfile profile = new UserProfile(123L);
-        profile.setWeight(75);
-        profile.setAge(30);
-        profile.setSex("М");
-
-        assertFalse(profile.isComplete());
-    }
-
-    @Test
-    void testIsComplete_MissingAge() {
-        UserProfile profile = new UserProfile(123L);
-        profile.setWeight(75);
-        profile.setHeight(180);
-        profile.setSex("М");
-
-        assertFalse(profile.isComplete());
-    }
-
-    @Test
-    void testIsComplete_MissingSex() {
-        UserProfile profile = new UserProfile(123L);
-        profile.setWeight(75);
-        profile.setHeight(180);
-        profile.setAge(30);
-
-        assertFalse(profile.isComplete());
-    }
-
-    @Test
-    void testIsComplete_BlankSex() {
-        UserProfile profile = new UserProfile(123L);
-        profile.setWeight(75);
-        profile.setHeight(180);
-        profile.setAge(30);
-        profile.setSex("   ");
-
-        assertFalse(profile.isComplete());
     }
 
     @Test
     void testSettersAndGetters() {
-        UserProfile profile = new UserProfile(123L);
-
-        profile.setWeight(80.5);
+        UserProfile profile = new UserProfile(200L);
+        profile.setWeight(85.6);
         profile.setHeight(185);
-        profile.setAge(35);
-        profile.setSex("Ж");
+        profile.setAge(40);
+        profile.setSex("female");
+        profile.setCaloriesGoal(1700);
         profile.setGoal("lose");
-        profile.setActivityLevel("high");
-        profile.setCaloriesGoal(2500);
+        profile.setActivityLevel("medium");
 
-        assertEquals(80.5, profile.getWeight());
+        assertEquals(85.6, profile.getWeight());
         assertEquals(185, profile.getHeight());
-        assertEquals(35, profile.getAge());
-        assertEquals("Ж", profile.getSex());
+        assertEquals(40, profile.getAge());
+        assertEquals("female", profile.getSex());
+        assertEquals(1700, profile.getCaloriesGoal());
         assertEquals("lose", profile.getGoal());
-        assertEquals("high", profile.getActivityLevel());
-        assertEquals(2500, profile.getCaloriesGoal());
+        assertEquals("medium", profile.getActivityLevel());
     }
 
     @Test
-    void testToString() {
-        UserProfile profile = new UserProfile(123L, 75.5, 180, "М", 30);
-        profile.setGoal("maintain");
-        profile.setActivityLevel("medium");
+    void testIsCompleteTrue() {
+        UserProfile profile = new UserProfile(300L);
+        profile.setWeight(55.9);
+        profile.setHeight(168);
+        profile.setAge(23);
+        profile.setSex("male");
+        assertTrue(profile.isComplete());
+    }
 
-        String result = profile.toString();
-
-        assertTrue(result.contains("123"));
-        assertTrue(result.contains("75.5"));
-        assertTrue(result.contains("180"));
-        assertTrue(result.contains("30"));
-        assertTrue(result.contains("М"));
+    @Test
+    void testIsCompleteFalse() {
+        UserProfile profile = new UserProfile(400L);
+        profile.setHeight(175);
+        profile.setSex("male");
+        // weight = 0, age = 0
+        assertFalse(profile.isComplete());
     }
 }

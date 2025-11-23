@@ -1,14 +1,12 @@
 package ru.CalorieSense.command.user.profile;
 
-import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.base.AbstractParameterCommand;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 
 public class HeightCommand extends AbstractParameterCommand {
-
-    public HeightCommand(BotApp sender, UserRepository repository) {
-        super(sender, repository, "/height", "рост");
+    public HeightCommand(UserRepository repository) {
+        super(repository, "/height", "рост");
     }
 
     @Override
@@ -22,14 +20,14 @@ public class HeightCommand extends AbstractParameterCommand {
 
     @Override
     protected String getExampleValue() {
-        return "175";
+        return "170";
     }
 
     @Override
     protected String getPromptMessage() {
         return "📏 Введите ваш рост в сантиметрах:\n\n" +
                 "Формат: `/height <значение>`\n\n" +
-                "Например: `/height 175`\n\n" +
-                "Допустимый диапазон: 100-250 см";
+                "Например: `/height 170`\n\n" +
+                "Допустимый диапазон: 100—250 см";
     }
 }

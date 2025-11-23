@@ -9,13 +9,6 @@ import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.ui.KeyboardFactory;
 
 public class UnknownCommand implements Command {
-
-    private final BotApp botApp;
-
-    public UnknownCommand(BotApp botApp) {
-        this.botApp = botApp;
-    }
-
     @Override
     public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();

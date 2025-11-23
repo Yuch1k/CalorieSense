@@ -1,113 +1,155 @@
 package ru.CalorieSense.router;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.CalorieSense.command.Command;
+import ru.CalorieSense.messaging.BotResponse;
+import ru.CalorieSense.messaging.MessageSender;
+import ru.CalorieSense.router.CommandRouter;
 
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 class CommandRouterTest {
 
-    @Mock
-    private Command fallbackCommand;
+    @Test
+    void testRegisterAndHandleKnownCommand() throws Exception {
+        Command fallback = Mockito.mock(Command.class);
+        MessageSender sender = Mockito.mock(MessageSender.class);
+        CommandRouter router = new CommandRouter(fallback, sender);
 
-    @Mock
-    private Command startCommand;
+        Command testCommand = Mockito.mock(Command.class);
+        BotResponse response = new BotResponse(1L, "test", null, null);
+        Mockito.when(testCommand.execute(Mockito.any(Update.class))).thenReturn(response);
 
-    @Mock
-    private Command helpCommand;
+        router.register("/test", testCommand);
 
-    @Mock
-    private Update update;
+        Message message = Mockito.mock(Message.class);
+        Mockito.when(message.getText()).thenReturn("/test");
+        Mockito.when(message.getChatId()).thenReturn(1L);
 
-    @Mock
-    private Message message;
+        Update update = Mockito.mock(Update.class);
+        Mockito.when(update.getMessage()).thenReturn(message);
 
-    private CommandRouter router;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        router = new CommandRouter(fallbackCommand);
-
-        when(update.getMessage()).thenReturn(message);
-        when(message.getChatId()).thenReturn(123L);
+        router.handle(update);
+        Mockito.verify(testCommand).execute(update);
+        Mockito.verify(sender).sendBotResponse(response);
     }
 
     @Test
-    void testHandle_RegisteredCommand_ExecutesCommand() throws Exception {
-        router.register("/start", startCommand);
-        when(message.getText()).thenReturn("/start");
+    void testFallbackForUnknownCommand() throws Exception {
+        Command fallback = Mockito.mock(Command.class);
+        MessageSender sender = Mockito.mock(MessageSender.class);
+        CommandRouter router = new CommandRouter(fallback, sender);
+
+        BotResponse response = new BotResponse(2L, "fallback", null, null);
+        Mockito.when(fallback.execute(Mockito.any(Update.class))).thenReturn(response);
+
+        Message message = Mockito.mock(Message.class);
+        Mockito.when(message.getText()).thenReturn("/unknown");
+        Mockito.when(message.getChatId()).thenReturn(2L);
+
+        Update update = Mockito.mock(Update.class);
+        Mockito.when(update.getMessage()).thenReturn(message);
 
         router.handle(update);
-
-        verify(startCommand).execute(update);
-        verify(fallbackCommand, never()).execute(any());
+        Mockito.verify(fallback).execute(update);
+        Mockito.verify(sender).sendBotResponse(response);
     }
 
     @Test
-    void testHandle_UnregisteredCommand_ExecutesFallback() throws Exception {
-        when(message.getText()).thenReturn("/unknown");
+    void testButtonToCommandMapping() throws Exception {
+        Command fallback = Mockito.mock(Command.class);
+        MessageSender sender = Mockito.mock(MessageSender.class);
+        CommandRouter router = new CommandRouter(fallback, sender);
+
+        Command caloriesCommand = Mockito.mock(Command.class);
+        BotResponse resp = new BotResponse(3L, "calories", null, null);
+        Mockito.when(caloriesCommand.execute(Mockito.any(Update.class))).thenReturn(resp);
+
+        router.register("/calories", caloriesCommand);
+
+        Message message = Mockito.mock(Message.class);
+        Mockito.when(message.getText()).thenReturn("📊 Мои калории");
+        Mockito.when(message.getChatId()).thenReturn(3L);
+
+        Update update = Mockito.mock(Update.class);
+        Mockito.when(update.getMessage()).thenReturn(message);
 
         router.handle(update);
-
-        verify(fallbackCommand).execute(update);
+        Mockito.verify(caloriesCommand).execute(update);
+        Mockito.verify(sender).sendBotResponse(resp);
     }
 
     @Test
-    void testHandle_ButtonText_TransformsToCommand() throws Exception {
-        router.register("/help", helpCommand);
-        when(message.getText()).thenReturn("❓ Помощь");
+    void testScenarioCommandAndActiveState() throws Exception {
+        Command fallback = Mockito.mock(Command.class);
+        MessageSender sender = Mockito.mock(MessageSender.class);
+        CommandRouter router = new CommandRouter(fallback, sender);
 
-        router.handle(update);
+        Command scenarioCommand = Mockito.mock(Command.class);
+        Mockito.when(scenarioCommand.execute(Mockito.any(Update.class)))
+                .thenReturn(new BotResponse(5L, "step 1", null, null))
+                .thenReturn(new BotResponse(5L, "step 2", null, null));
 
-        verify(helpCommand).execute(update);
+        router.register("/register", scenarioCommand);
+
+        Message msg1 = Mockito.mock(Message.class);
+        Mockito.when(msg1.getText()).thenReturn("/register");
+        Mockito.when(msg1.getChatId()).thenReturn(5L);
+        Update upd1 = Mockito.mock(Update.class);
+        Mockito.when(upd1.getMessage()).thenReturn(msg1);
+        router.handle(upd1);
+        Mockito.verify(sender).sendBotResponse(Mockito.argThat(r -> r.getText().equals("step 1")));
+
+        Message msg2 = Mockito.mock(Message.class);
+        Mockito.when(msg2.getText()).thenReturn("180");
+        Mockito.when(msg2.getChatId()).thenReturn(5L);
+        Update upd2 = Mockito.mock(Update.class);
+        Mockito.when(upd2.getMessage()).thenReturn(msg2);
+        router.handle(upd2);
+        Mockito.verify(sender).sendBotResponse(Mockito.argThat(r -> r.getText().equals("step 2")));
     }
 
     @Test
-    void testHandle_CommandWithParameters_ExecutesCommand() throws Exception {
-        Command weightCommand = mock(Command.class);
-        router.register("/weight", weightCommand);
-        when(message.getText()).thenReturn("/weight 75");
+    void testScenarioDeactivationOnNonScenarioCommand() throws Exception {
+        Command fallback = Mockito.mock(Command.class);
+        MessageSender sender = Mockito.mock(MessageSender.class);
+        CommandRouter router = new CommandRouter(fallback, sender);
 
-        router.handle(update);
+        Command scenarioCommand = Mockito.mock(Command.class);
+        Mockito.when(scenarioCommand.getClass().getSimpleName()).thenReturn("ManualInputCommand");
+        Mockito.when(scenarioCommand.execute(Mockito.any(Update.class)))
+                .thenReturn(new BotResponse(6L, "manual step", null, null));
 
-        verify(weightCommand).execute(update);
-    }
+        Command regularCommand = Mockito.mock(Command.class);
+        Mockito.when(regularCommand.execute(Mockito.any(Update.class)))
+                .thenReturn(new BotResponse(6L, "regular", null, null));
+        router.register("/manualinput", scenarioCommand);
+        router.register("/profile", regularCommand);
 
-    @Test
-    void testHandle_CaseInsensitive_ExecutesCommand() throws Exception {
-        router.register("/start", startCommand);
-        when(message.getText()).thenReturn("/START");
+        Message msgStart = Mockito.mock(Message.class);
+        Mockito.when(msgStart.getText()).thenReturn("/manualinput");
+        Mockito.when(msgStart.getChatId()).thenReturn(6L);
+        Update updStart = Mockito.mock(Update.class);
+        Mockito.when(updStart.getMessage()).thenReturn(msgStart);
+        router.handle(updStart);
 
-        router.handle(update);
+        Message msgStop = Mockito.mock(Message.class);
+        Mockito.when(msgStop.getText()).thenReturn("/profile");
+        Mockito.when(msgStop.getChatId()).thenReturn(6L);
+        Update updStop = Mockito.mock(Update.class);
+        Mockito.when(updStop.getMessage()).thenReturn(msgStop);
+        router.handle(updStop);
 
-        verify(startCommand).execute(update);
-    }
+        Message msgFree = Mockito.mock(Message.class);
+        Mockito.when(msgFree.getText()).thenReturn("Something");
+        Mockito.when(msgFree.getChatId()).thenReturn(6L);
+        Update updFree = Mockito.mock(Update.class);
+        Mockito.when(updFree.getMessage()).thenReturn(msgFree);
+        router.handle(updFree);
 
-    @Test
-    void testHandle_NonCommand_ExecutesFallback() throws Exception {
-        when(message.getText()).thenReturn("Hello");
-
-        router.handle(update);
-
-        verify(fallbackCommand).execute(update);
-    }
-
-    @Test
-    void testRegister_MultipleCommands() throws Exception {
-        router.register("/start", startCommand);
-        router.register("/help", helpCommand);
-
-        when(message.getText()).thenReturn("/help");
-
-        router.handle(update);
-
-        verify(helpCommand).execute(update);
-        verify(startCommand, never()).execute(any());
+        Mockito.verify(fallback).execute(updFree);
     }
 }

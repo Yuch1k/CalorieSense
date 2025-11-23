@@ -1,9 +1,7 @@
 package ru.CalorieSense.command.nutrition;
 
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
-import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
 import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.model.DailyProgress;
@@ -15,16 +13,13 @@ import ru.CalorieSense.service.nutrition.MealTrackingService;
 import ru.CalorieSense.ui.KeyboardFactory;
 
 public class CaloriesCommand implements Command {
-
-    private final BotApp sender;
     private final UserRepository userRepository;
     private final CalorieCalculatorService calculator;
     private final MealTrackingService mealTracker;
 
-    public CaloriesCommand(BotApp sender, UserRepository userRepository,
+    public CaloriesCommand(UserRepository userRepository,
                            CalorieCalculatorService calculator,
                            MealTrackingService mealTracker) {
-        this.sender = sender;
         this.userRepository = userRepository;
         this.calculator = calculator;
         this.mealTracker = mealTracker;
@@ -34,11 +29,8 @@ public class CaloriesCommand implements Command {
     public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
         UserProfile profile = userRepository.findByChatId(chatId);
-
         MacronutrientResult target = calculator.calculateWithMacros(profile);
-
         DailyProgress progress = mealTracker.calculateDailyProgress(chatId, target);
-
         String responseText;
         if (!profile.isComplete()) {
             responseText = "⚠️ *Для точного расчёта пройдите регистрацию!*\n\n" +
@@ -48,7 +40,6 @@ public class CaloriesCommand implements Command {
         } else {
             responseText = formatProgressWithTarget(progress, profile);
         }
-
         ReplyKeyboard keyboard = KeyboardFactory.getMainKeyboard();
         return new BotResponse(chatId, responseText, "Markdown", keyboard);
     }
@@ -56,21 +47,18 @@ public class CaloriesCommand implements Command {
     private String formatProgressWithTarget(DailyProgress progress, UserProfile profile) {
         String goalText = getGoalText(profile.getGoal());
         String activityText = calculator.getActivityLevelText(profile.getActivityLevel());
-
         double percentage = progress.getCaloriesPercentage();
         String progressBar = createProgressBar(percentage);
-
         String statusEmoji;
         if (percentage < 50) {
-            statusEmoji = "🟢"; // Можно еще много съесть
+            statusEmoji = "🟢";
         } else if (percentage < 90) {
-            statusEmoji = "🟡"; // Близко к цели
+            statusEmoji = "🟡";
         } else if (percentage <= 110) {
-            statusEmoji = "✅"; // В пределах нормы
+            statusEmoji = "✅";
         } else {
-            statusEmoji = "🔴"; // Перебор
+            statusEmoji = "🔴";
         }
-
         return statusEmoji + " *Ваш прогресс за сегодня:*\n\n" +
                 "🔥 *Калории:* " + progress.getConsumedCalories() + " / " +
                 progress.getTargetCalories() + " ккал\n" +
@@ -94,13 +82,9 @@ public class CaloriesCommand implements Command {
                 "• Активность: " + activityText;
     }
 
-    /**
-     * Создаёт визуальную полосу прогресса
-     */
     private String createProgressBar(double percentage) {
         int filled = (int) (percentage / 10);
-        filled = Math.min(filled, 10); // Максимум 10 блоков
-
+        filled = Math.min(filled, 10); // максимум 10 блоков
         StringBuilder bar = new StringBuilder();
         for (int i = 0; i < 10; i++) {
             if (i < filled) {
