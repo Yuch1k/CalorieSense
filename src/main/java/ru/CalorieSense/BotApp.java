@@ -38,18 +38,12 @@ import ru.CalorieSense.service.nutrition.MealTrackingService;
 // Репозитории
 import ru.CalorieSense.router.CommandRouter;
 import ru.CalorieSense.repository.UserRepository;
-import ru.CalorieSense.repository.InMemoryUserRepository;
 import ru.CalorieSense.repository.MealRepository;
-import ru.CalorieSense.repository.InMemoryMealRepository;
 import ru.CalorieSense.repository.JdbcUserRepository;
 import ru.CalorieSense.repository.JdbcMealRepository;
 import ru.CalorieSense.db.Database;
 
-
 import ru.CalorieSense.messaging.MessageSender;
-import ru.CalorieSense.messaging.BotResponse;
-import ru.CalorieSense.router.CommandRouter;
-
 
 public class BotApp extends TelegramLongPollingBot {
 
@@ -64,32 +58,31 @@ public class BotApp extends TelegramLongPollingBot {
         UserRepository userRepository = new JdbcUserRepository(database);
         MealRepository mealRepository = new JdbcMealRepository(database);
 
-
         // Сервисы
         CalorieCalculatorService calculator = new CalorieCalculatorService();
         MealTrackingService mealTracker = new MealTrackingService(mealRepository);
 
         // Системные команды
-        Command unknownCommand = new UnknownCommand(this);
-        Command startCommand = new StartCommand(this);
-        Command helpCommand = new HelpCommand(this);
-        Command backToMainCommand = new BackToMainCommand(this);
+        Command unknownCommand = new UnknownCommand();
+        Command startCommand = new StartCommand();
+        Command helpCommand = new HelpCommand();
+        Command backToMainCommand = new BackToMainCommand();
 
         // Команды пользователя
-        Command registerScenario = new RegisterScenario(this, userRepository);
-        Command editParamsCommand = new ProfileCommand(this, userRepository, calculator);
-        Command heightCommand = new HeightCommand(this, userRepository);
-        Command weightCommand = new WeightCommand(this, userRepository);
-        Command ageCommand = new AgeCommand(this, userRepository);
-        Command sexCommand = new SexCommand(this, userRepository);
-        Command goalCommand = new GoalCommand(this, userRepository);
-        Command activityCommand = new ActivityCommand(this, userRepository, calculator);
+        Command registerScenario = new RegisterScenario(userRepository);
+        Command editParamsCommand = new ProfileCommand(userRepository, calculator);
+        Command heightCommand = new HeightCommand(userRepository);
+        Command weightCommand = new WeightCommand(userRepository);
+        Command ageCommand = new AgeCommand(userRepository);
+        Command sexCommand = new SexCommand(userRepository);
+        Command goalCommand = new GoalCommand(userRepository);
+        Command activityCommand = new ActivityCommand(userRepository, calculator);
 
         // Команды питания
-        Command caloriesCommand = new CaloriesCommand(this, userRepository, calculator, mealTracker);
-        Command addMealCommand = new AddMealCommand(this);
-        Command manualInputCommand = new ManualInputCommand(this, mealRepository);
-        Command photoInputCommand = new PhotoInputCommand(this);
+        Command caloriesCommand = new CaloriesCommand(userRepository, calculator, mealTracker);
+        Command addMealCommand = new AddMealCommand();
+        Command manualInputCommand = new ManualInputCommand(mealRepository);
+        Command photoInputCommand = new PhotoInputCommand();
 
         // Создаём sender
         MessageSender sender = new MessageSender(this);
@@ -122,12 +115,10 @@ public class BotApp extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            try {
-                router.handle(update);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        try {
+            router.handle(update);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

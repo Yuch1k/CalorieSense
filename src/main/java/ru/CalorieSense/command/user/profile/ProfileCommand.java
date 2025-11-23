@@ -1,9 +1,7 @@
 package ru.CalorieSense.command.user.profile;
 
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
-import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
 import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
@@ -13,14 +11,10 @@ import ru.CalorieSense.service.UserProfileFormatter;
 import ru.CalorieSense.ui.KeyboardFactory;
 
 public class ProfileCommand implements Command {
-
-    private final BotApp sender;
     private final UserRepository repository;
     private final UserProfileFormatter formatter;
 
-    public ProfileCommand(BotApp sender, UserRepository repository,
-                          CalorieCalculatorService calculator) {
-        this.sender = sender;
+    public ProfileCommand(UserRepository repository, CalorieCalculatorService calculator) {
         this.repository = repository;
         this.formatter = new UserProfileFormatter(calculator);
     }

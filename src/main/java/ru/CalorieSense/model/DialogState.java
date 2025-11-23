@@ -1,8 +1,9 @@
 package ru.CalorieSense.model;
 
 public class DialogState {
-
-    public enum Step { NONE, HEIGHT, WEIGHT, AGE, GENDER, GOAL, ACTIVITY }
+    public enum Step {
+        NONE, HEIGHT, WEIGHT, AGE, GENDER, GOAL, ACTIVITY
+    }
 
     private Step step = Step.NONE;
 

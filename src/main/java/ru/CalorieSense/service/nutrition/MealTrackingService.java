@@ -15,12 +15,8 @@ public class MealTrackingService {
         this.mealRepository = mealRepository;
     }
 
-    /**
-     * Рассчитывает прогресс пользователя за сегодня
-     */
     public DailyProgress calculateDailyProgress(Long chatId, MacronutrientResult target) {
         List<Meal> todayMeals = mealRepository.getTodayMeals(chatId);
-
         int consumedCalories = todayMeals.stream().mapToInt(Meal::getCalories).sum();
         int consumedProtein = todayMeals.stream().mapToInt(Meal::getProtein).sum();
         int consumedFats = todayMeals.stream().mapToInt(Meal::getFats).sum();
@@ -32,9 +28,6 @@ public class MealTrackingService {
         );
     }
 
-    /**
-     * Возвращает все приёмы пищи за сегодня
-     */
     public List<Meal> getTodayMeals(Long chatId) {
         return mealRepository.getTodayMeals(chatId);
     }

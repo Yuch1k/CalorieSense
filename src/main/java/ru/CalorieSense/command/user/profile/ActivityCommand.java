@@ -1,9 +1,7 @@
 package ru.CalorieSense.command.user.profile;
 
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
-import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
 import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
@@ -12,14 +10,10 @@ import ru.CalorieSense.repository.UserRepository;
 import ru.CalorieSense.ui.KeyboardFactory;
 
 public class ActivityCommand implements Command {
-
-    private final BotApp sender;
     private final UserRepository repository;
     private final CalorieCalculatorService calculator;
 
-    public ActivityCommand(BotApp sender, UserRepository repository,
-                           CalorieCalculatorService calculator) {
-        this.sender = sender;
+    public ActivityCommand(UserRepository repository, CalorieCalculatorService calculator) {
         this.repository = repository;
         this.calculator = calculator;
     }
@@ -30,33 +24,25 @@ public class ActivityCommand implements Command {
         String text = update.getMessage().getText().trim();
 
         boolean isDirectCommand = text.toLowerCase().startsWith("/activity");
-
         if (!isDirectCommand) {
-            showActivityPrompt(chatId);
-
+            return showActivityPrompt(chatId);
         }
 
         String[] parts = text.split("\\s+", 2);
-
         if (parts.length < 2) {
-            showActivityPrompt(chatId);
-
+            return showActivityPrompt(chatId);
         }
 
         String input = parts[1];
         String activity;
         String activityText;
-
-        if (input.equals("1") || input.equalsIgnoreCase("малая") ||
-                input.equalsIgnoreCase("low")) {
+        if (input.equals("1") || input.equalsIgnoreCase("малая") || input.equalsIgnoreCase("low")) {
             activity = "low";
             activityText = "Малая активность (без тренировок)";
-        } else if (input.equals("2") || input.equalsIgnoreCase("средняя") ||
-                input.equalsIgnoreCase("medium")) {
+        } else if (input.equals("2") || input.equalsIgnoreCase("средняя") || input.equalsIgnoreCase("medium")) {
             activity = "medium";
             activityText = "Средняя активность (1-2 тренировки в неделю)";
-        } else if (input.equals("3") || input.equalsIgnoreCase("большая") ||
-                input.equalsIgnoreCase("high")) {
+        } else if (input.equals("3") || input.equalsIgnoreCase("большая") || input.equalsIgnoreCase("high")) {
             activity = "high";
             activityText = "Большая активность (более 2 тренировок в неделю)";
         } else {
@@ -71,8 +57,7 @@ public class ActivityCommand implements Command {
         repository.save(profile);
         ReplyKeyboard keyboard = KeyboardFactory.getEditParamsKeyboard();
         return new BotResponse(chatId, "✅ Уровень активности обновлён: *" + activityText + "*\n\n" +
-                "Используйте '📊 Мои калории' для просмотра обновлённых расчётов.\n\n" +
-                "Возврат в главное меню.", "Markdown", keyboard);
+                "Используйте '📊 Мои калории' для просмотра обновлённых расчётов.\n\nВозврат в главное меню.", "Markdown", keyboard);
     }
 
     private BotResponse showActivityPrompt(Long chatId) throws Exception {
@@ -80,8 +65,7 @@ public class ActivityCommand implements Command {
         String currentActivity = calculator.getActivityLevelText(profile.getActivityLevel());
         ReplyKeyboard keyboard = KeyboardFactory.getEditParamsKeyboard();
         return new BotResponse(chatId, "💪 *Текущий уровень активности:* " + currentActivity + "\n\n" +
-                "Выберите новый уровень:\n\n" +
-                "Введите:\n" +
+                "Выберите новый уровень:\n\nВведите:\n" +
                 "• `/activity 1` — Малая (без тренировок, сидячая работа)\n" +
                 "• `/activity 2` — Средняя (1-2 тренировки в неделю)\n" +
                 "• `/activity 3` — Большая (более 2 тренировок в неделю)", "Markdown", keyboard);

@@ -3,15 +3,12 @@ package ru.CalorieSense.repository;
 import ru.CalorieSense.model.Meal;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class InMemoryMealRepository implements MealRepository {
-
     private final ConcurrentHashMap<Long, Meal> storage = new ConcurrentHashMap<>();
     private final AtomicLong idGenerator = new AtomicLong(1);
 
@@ -24,7 +21,7 @@ public class InMemoryMealRepository implements MealRepository {
     public List<Meal> getMealsByDate(Long chatId, LocalDate date) {
         return storage.values().stream()
                 .filter(meal -> meal.getChatId().equals(chatId))
-                .filter(meal -> meal.getTimestamp().toLocalDate().equals(date))
+                .filter(meal -> meal.getDateTime().toLocalDate().equals(date))
                 .collect(Collectors.toList());
     }
 

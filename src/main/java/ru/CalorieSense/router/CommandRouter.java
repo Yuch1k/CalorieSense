@@ -11,13 +11,10 @@ import java.util.Locale;
 import java.util.Map;
 
 public class CommandRouter {
-
     private final Map<String, Command> commands = new HashMap<>();
     private final Command fallback;
     private final Map<Long, Command> activeScenarios = new HashMap<>();
-
     private final Map<String, String> buttonToCommand = new HashMap<>();
-
     private final MessageSender sender;
 
     public CommandRouter(Command fallback, MessageSender sender) {
@@ -45,27 +42,18 @@ public class CommandRouter {
         // Меню добавления приёма пищи
         buttonToCommand.put("✍️ Ввести вручную", "/manualinput");
         buttonToCommand.put("📸 Ввести по фото", "/photoinput");
-
         buttonToCommand.put("◀️ Назад в главное меню", "/backtomain");
     }
 
     public void register(String name, Command handler) {
-        if (name == null || handler == null) {
-            return;
-        }
+        if (name == null || handler == null) return;
         commands.put(name.toLowerCase(Locale.ROOT), handler);
     }
 
     public void handle(Update update) throws Exception {
-        if (update == null) {
-            return;
-        }
-
+        if (update == null) return;
         Message message = update.getMessage();
-        if (message == null || !message.hasText()) {
-            return;
-        }
-
+        if (message == null || !message.hasText()) return;
         String text = message.getText().trim();
         Long chatId = message.getChatId();
 
@@ -73,23 +61,16 @@ public class CommandRouter {
         if (buttonToCommand.containsKey(text)) {
             text = buttonToCommand.get(text);
         }
-
         String cmd = text.split("\\s+")[0].toLowerCase(Locale.ROOT);
-
         BotResponse response;
-
         if (cmd.startsWith("/")) {
             Command handler = commands.getOrDefault(cmd, fallback);
-
             boolean isScenario = handler.getClass().getSimpleName().contains("Scenario")
                     || handler.getClass().getSimpleName().equals("ManualInputCommand");
-
             if (!isScenario) {
                 activeScenarios.remove(chatId);
             }
-
             response = handler.execute(update);
-
             if (isScenario) {
                 activeScenarios.put(chatId, handler);
             }
@@ -99,9 +80,8 @@ public class CommandRouter {
         } else {
             response = fallback.execute(update);
         }
-
         if (sender != null && response != null) {
-            sender.send(response);
+            sender.sendBotResponse(response);
         }
     }
 }

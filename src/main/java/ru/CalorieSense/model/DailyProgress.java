@@ -24,11 +24,11 @@ public class DailyProgress {
         this.targetCarbs = targetCarbs;
     }
 
-    // Геттеры
     public int getConsumedCalories() { return consumedCalories; }
     public int getConsumedProtein() { return consumedProtein; }
     public int getConsumedFats() { return consumedFats; }
     public int getConsumedCarbs() { return consumedCarbs; }
+
     public int getTargetCalories() { return targetCalories; }
     public int getTargetProtein() { return targetProtein; }
     public int getTargetFats() { return targetFats; }
@@ -37,15 +37,12 @@ public class DailyProgress {
     public int getRemainingCalories() {
         return targetCalories - consumedCalories;
     }
-
     public int getRemainingProtein() {
         return targetProtein - consumedProtein;
     }
-
     public int getRemainingFats() {
         return targetFats - consumedFats;
     }
-
     public int getRemainingCarbs() {
         return targetCarbs - consumedCarbs;
     }

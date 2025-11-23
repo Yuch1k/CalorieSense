@@ -9,13 +9,6 @@ import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.ui.KeyboardFactory;
 
 public class HelpCommand implements Command {
-
-    private final BotApp sender;
-
-    public HelpCommand(BotApp sender) {
-        this.sender = sender;
-    }
-
     private static final String HELP_MESSAGE =
             "📋 *Доступные команды:*\n\n" +
                     "📊 *Мои калории* — показать дневную норму калорий и БЖУ\n" +
@@ -32,13 +25,10 @@ public class HelpCommand implements Command {
                     "• Цель (похудение/поддержание/набор)\n" +
                     "• Уровень активности\n\n" +
                     "Вы можете использовать кнопки меню или команды вида `/calories`";
-
-
     @Override
     public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
-        String message = HELP_MESSAGE;
         ReplyKeyboard keyboard = KeyboardFactory.getMainKeyboard();
-        return new BotResponse(chatId, message, "Markdown", keyboard);
+        return new BotResponse(chatId, HELP_MESSAGE, "Markdown", keyboard);
     }
 }
