@@ -2,8 +2,10 @@ package ru.CalorieSense.command.base;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
 import ru.CalorieSense.ui.KeyboardFactory;
@@ -26,7 +28,7 @@ public abstract class AbstractParameterCommand implements Command {
     protected abstract void applyValue(UserProfile profile, String value) throws Exception;
 
     @Override
-    public void execute(Update update) throws Exception {
+    public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
         String text = update.getMessage().getText().trim();
 
@@ -37,7 +39,7 @@ public abstract class AbstractParameterCommand implements Command {
 
         if (!isDirectCommand || parts.length < 2) {
             sendPrompt(chatId);
-            return;
+
         }
 
         try {
@@ -45,33 +47,23 @@ public abstract class AbstractParameterCommand implements Command {
             applyValue(profile, parts[1]);
             repository.save(profile);
 
-            SendMessage message = SendMessage.builder()
-                    .chatId(String.valueOf(chatId))
-                    .text("✅ " + capitalize(paramName) + " обновлён!\n\nВозврат в главное меню.")
-                    .replyMarkup(KeyboardFactory.getMainKeyboard())
-                    .build();
 
-            sender.execute(message);
+            ReplyKeyboard keyboard = KeyboardFactory.getMainKeyboard();
+
+            return new BotResponse(chatId, ("✅ " + capitalize(paramName) + " обновлён!\n\nВозврат в главное меню."), "Markdown", keyboard);
+
+
         } catch (Exception e) {
-            SendMessage message = SendMessage.builder()
-                    .chatId(String.valueOf(chatId))
-                    .text("❌ Ошибка: " + e.getMessage() + "\n\nПопробуйте ещё раз.")
-                    .replyMarkup(KeyboardFactory.getEditParamsKeyboard())
-                    .build();
-
-            sender.execute(message);
+            ReplyKeyboard keyboard = KeyboardFactory.getEditParamsKeyboard();
+            return new BotResponse(chatId, ("❌ Ошибка: " + e.getMessage() + "\n\nПопробуйте ещё раз."), "Markdown", keyboard);
         }
     }
 
-    private void sendPrompt(Long chatId) throws Exception {
-        SendMessage message = SendMessage.builder()
-                .chatId(String.valueOf(chatId))
-                .text(getPromptMessage())
-                .parseMode("Markdown")
-                .replyMarkup(KeyboardFactory.getEditParamsKeyboard())
-                .build();
+    private BotResponse sendPrompt(Long chatId) throws Exception {
 
-        sender.execute(message);
+        ReplyKeyboard keyboard = KeyboardFactory.getEditParamsKeyboard();
+        return new BotResponse(chatId, (getPromptMessage()), "Markdown", keyboard);
+
     }
 
     protected String getPromptMessage() {

@@ -2,13 +2,12 @@ package ru.CalorieSense.command.system;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.CalorieSense.BotApp;
+import ru.CalorieSense.messaging.BotResponse;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,26 +32,18 @@ class StartCommandTest {
 
         when(update.getMessage()).thenReturn(message);
         when(message.getChatId()).thenReturn(123L);
+        when(message.getText()).thenReturn("/start");
     }
 
     @Test
-    void testExecute_SendsWelcomeMessage() throws Exception {
-        startCommand.execute(update);
+    void testExecute_ReturnsWelcomeResponse() throws Exception {
+        BotResponse response = startCommand.execute(update);
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-
-        SendMessage sentMessage = messageCaptor.getValue();
-        assertEquals("123", sentMessage.getChatId());
-        assertTrue(sentMessage.getText().contains("Добро пожаловать") ||
-                sentMessage.getText().contains("Привет"));
-        assertNotNull(sentMessage.getReplyMarkup());
-    }
-
-    @Test
-    void testExecute_CallsOnce() throws Exception {
-        startCommand.execute(update);
-
-        verify(botApp, times(1)).execute(any(SendMessage.class));
+        assertNotNull(response);
+        assertEquals(123L, response.getChatId());
+        String text = response.getText();
+        assertTrue(text.contains("Добро пожаловать") || text.contains("Привет"));
+        assertEquals("Markdown", response.getParseMode());
+        assertNotNull(response.getReplyMarkup());
     }
 }

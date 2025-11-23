@@ -2,13 +2,15 @@ package ru.CalorieSense.command.nutrition.meal;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.model.Meal;
 import ru.CalorieSense.model.MealInputState;
 import ru.CalorieSense.repository.InMemoryMealRepository;
 import ru.CalorieSense.ui.KeyboardFactory;
-
+import ru.CalorieSense.repository.MealRepository;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,30 +18,26 @@ import java.util.Map;
 public class ManualInputCommand implements Command {
 
     private final BotApp sender;
-    private final InMemoryMealRepository mealRepository;
+    private final MealRepository mealRepository;
     private final Map<Long, MealInputState> stateMap = new HashMap<>();
 
-    public ManualInputCommand(BotApp sender, InMemoryMealRepository mealRepository) {
+    public ManualInputCommand(BotApp sender, MealRepository mealRepository) {
         this.sender = sender;
         this.mealRepository = mealRepository;
     }
 
     @Override
-    public void execute(Update update) throws Exception {
+    public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
         String text = update.getMessage().getText().trim();
-
+        ReplyKeyboard keyboard = KeyboardFactory.getMealInputKeyboard();
         MealInputState state = stateMap.getOrDefault(chatId, new MealInputState());
 
         switch (state.getStep()) {
             case NONE -> {
-                sender.execute(SendMessage.builder()
-                        .chatId(chatId.toString())
-                        .text("✍️ *Ручной ввод приёма пищи*\n\n" +
-                                "Введите количество калорий:")
-                        .parseMode("Markdown")
-                        .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                        .build());
+                return new BotResponse(chatId,
+                        ("✍️ *Ручной ввод приёма пищи*\n\n" + "Введите количество калорий:"),
+                        "Markdown", keyboard);
                 state.next();
             }
 
@@ -48,26 +46,22 @@ public class ManualInputCommand implements Command {
                     int calories = Integer.parseInt(text);
                     if (calories > 0 && calories <= 10000) {
                         state.setCalories(calories);
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("✅ Калории: " + calories + " ккал\n\n" +
-                                        "Теперь введите количество белков (в граммах):")
-                                .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                                .build());
+                        return new BotResponse(chatId,
+                                ("✅ Калории: " + calories + " ккал\n\n" +
+                                        "Теперь введите количество белков (в граммах):"),
+                                "Markdown", keyboard);
+
                         state.next();
                     } else {
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("❌ Калории должны быть от 1 до 10000. Попробуйте ещё раз:")
-                                .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                                .build());
+                        return new BotResponse(chatId,
+                                ("❌ Калории должны быть от 1 до 10000. Попробуйте ещё раз:"),
+                                "Markdown", keyboard);
+
                     }
                 } else {
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("❌ Введите число (например: 500)")
-                            .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                            .build());
+                    return new BotResponse(chatId,
+                            ("❌ Введите число (например: 500)"),
+                            "Markdown", keyboard);
                 }
             }
 
@@ -76,26 +70,20 @@ public class ManualInputCommand implements Command {
                     int protein = Integer.parseInt(text);
                     if (protein >= 0 && protein <= 1000) {
                         state.setProtein(protein);
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("✅ Белки: " + protein + " г\n\n" +
-                                        "Теперь введите количество жиров (в граммах):")
-                                .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                                .build());
+                        return new BotResponse(chatId,
+                                ("✅ Белки: " + protein + " г\n\n" +
+                                        "Теперь введите количество жиров (в граммах):"),
+                                "Markdown", keyboard);
                         state.next();
                     } else {
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("❌ Белки должны быть от 0 до 1000 г. Попробуйте ещё раз:")
-                                .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                                .build());
+                        return new BotResponse(chatId,
+                                ("❌ Белки должны быть от 0 до 1000 г. Попробуйте ещё раз:"),
+                                "Markdown", keyboard);
                     }
                 } else {
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("❌ Введите число (например: 30)")
-                            .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                            .build());
+                    return new BotResponse(chatId,
+                            ("❌ Введите число (например: 30)"),
+                            "Markdown", keyboard);
                 }
             }
 
@@ -104,26 +92,21 @@ public class ManualInputCommand implements Command {
                     int fats = Integer.parseInt(text);
                     if (fats >= 0 && fats <= 1000) {
                         state.setFats(fats);
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("✅ Жиры: " + fats + " г\n\n" +
-                                        "Наконец, введите количество углеводов (в граммах):")
-                                .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                                .build());
+                        return new BotResponse(chatId,
+                                ("✅ Жиры: " + fats + " г\n\n" +
+                                        "Наконец, введите количество углеводов (в граммах):"),
+                                "Markdown", keyboard);
                         state.next();
                     } else {
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("❌ Жиры должны быть от 0 до 1000 г. Попробуйте ещё раз:")
-                                .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                                .build());
+
+                        return new BotResponse(chatId,
+                                ("❌ Жиры должны быть от 0 до 1000 г. Попробуйте ещё раз:"),
+                                "Markdown", keyboard);
                     }
                 } else {
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("❌ Введите число (например: 20)")
-                            .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                            .build());
+                    return new BotResponse(chatId,
+                            ("❌ Введите число (например: 20)"),
+                            "Markdown", keyboard);
                 }
             }
 
@@ -144,39 +127,32 @@ public class ManualInputCommand implements Command {
                                 "Ручной ввод"
                         );
                         mealRepository.addMeal(meal);
-
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("✅ *Приём пищи добавлен!*\n\n" +
-                                        "🔥 Калории: " + state.getCalories() + " ккал\n" +
-                                        "🍗 Белки: " + state.getProtein() + " г\n" +
-                                        "🧈 Жиры: " + state.getFats() + " г\n" +
-                                        "🍞 Углеводы: " + carbs + " г\n\n" +
-                                        "Используйте '📊 Мои калории' для просмотра прогресса за день.")
-                                .parseMode("Markdown")
-                                .replyMarkup(KeyboardFactory.getMainKeyboard())
-                                .build());
+                        ReplyKeyboard keyboard1 = KeyboardFactory.getMainKeyboard();
+                        String msg = ("✅ *Приём пищи добавлен!*\n\n" +
+                                "🔥 Калории: " + state.getCalories() + " ккал\n" +
+                                "🍗 Белки: " + state.getProtein() + " г\n" +
+                                "🧈 Жиры: " + state.getFats() + " г\n" +
+                                "🍞 Углеводы: " + carbs + " г\n\n" +
+                                "Используйте '📊 Мои калории' для просмотра прогресса за день.");
+                        return new BotResponse(chatId, msg, "Markdown", keyboard1);
 
                         state.reset();
                         stateMap.remove(chatId);
-                        return;
+
                     } else {
-                        sender.execute(SendMessage.builder()
-                                .chatId(chatId.toString())
-                                .text("❌ Углеводы должны быть от 0 до 1000 г. Попробуйте ещё раз:")
-                                .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                                .build());
+                        return new BotResponse(chatId,
+                                ("❌ Углеводы должны быть от 0 до 1000 г. Попробуйте ещё раз:"),
+                                "Markdown", keyboard);
                     }
                 } else {
-                    sender.execute(SendMessage.builder()
-                            .chatId(chatId.toString())
-                            .text("❌ Введите число (например: 50)")
-                            .replyMarkup(KeyboardFactory.getMealInputKeyboard())
-                            .build());
+                    return new BotResponse(chatId,
+                            ("❌ Введите число (например: 50)"),
+                            "Markdown", keyboard);
                 }
             }
         }
 
         stateMap.put(chatId, state);
+        return
     }
 }

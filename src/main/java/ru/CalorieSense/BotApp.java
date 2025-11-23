@@ -41,19 +41,29 @@ import ru.CalorieSense.repository.UserRepository;
 import ru.CalorieSense.repository.InMemoryUserRepository;
 import ru.CalorieSense.repository.MealRepository;
 import ru.CalorieSense.repository.InMemoryMealRepository;
+import ru.CalorieSense.repository.JdbcUserRepository;
+import ru.CalorieSense.repository.JdbcMealRepository;
+import ru.CalorieSense.db.Database;
+
+
+import ru.CalorieSense.messaging.MessageSender;
+import ru.CalorieSense.messaging.BotResponse;
+import ru.CalorieSense.router.CommandRouter;
+
 
 public class BotApp extends TelegramLongPollingBot {
 
     private final String botUsername;
     private final CommandRouter router;
 
-    private BotApp(String botToken, String botUsername) {
+    private BotApp(String botToken, String botUsername, Database database) {
         super(botToken);
         this.botUsername = botUsername;
 
         // Репозитории
-        UserRepository userRepository = new InMemoryUserRepository();
-        InMemoryMealRepository mealRepository = new InMemoryMealRepository();
+        UserRepository userRepository = new JdbcUserRepository(database);
+        MealRepository mealRepository = new JdbcMealRepository(database);
+
 
         // Сервисы
         CalorieCalculatorService calculator = new CalorieCalculatorService();
@@ -81,8 +91,12 @@ public class BotApp extends TelegramLongPollingBot {
         Command manualInputCommand = new ManualInputCommand(this, mealRepository);
         Command photoInputCommand = new PhotoInputCommand(this);
 
-        // Инициализация роутера
-        this.router = new CommandRouter(unknownCommand);
+        // Создаём sender
+        MessageSender sender = new MessageSender(this);
+
+        // Роутер
+        CommandRouter router = new CommandRouter(unknownCommand, sender);
+        this.router = router;
 
         // Регистрация системных команд
         router.register("/start", startCommand);
@@ -132,6 +146,7 @@ public class BotApp extends TelegramLongPollingBot {
         }
         String token = props.getProperty("bot.token");
         String username = props.getProperty("bot.username");
-        return new BotApp(token, username);
+        Database database = Database.fromProperties(props);
+        return new BotApp(token, username, database);
     }
 }

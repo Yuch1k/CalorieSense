@@ -2,8 +2,10 @@ package ru.CalorieSense.command.user.profile;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import ru.CalorieSense.BotApp;
 import ru.CalorieSense.command.Command;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.repository.UserRepository;
@@ -24,19 +26,11 @@ public class ProfileCommand implements Command {
     }
 
     @Override
-    public void execute(Update update) throws Exception {
+    public BotResponse execute(Update update) throws Exception {
         Long chatId = update.getMessage().getChatId();
         UserProfile profile = repository.findByChatId(chatId);
-
         String profileText = formatter.formatFullProfile(profile);
-
-        SendMessage message = SendMessage.builder()
-                .chatId(String.valueOf(chatId))
-                .text(profileText)
-                .parseMode("Markdown")
-                .replyMarkup(KeyboardFactory.getEditParamsKeyboard())
-                .build();
-
-        sender.execute(message);
+        ReplyKeyboard keyboard = KeyboardFactory.getEditParamsKeyboard();
+        return new BotResponse(chatId, profileText, "Markdown", keyboard);
     }
 }
