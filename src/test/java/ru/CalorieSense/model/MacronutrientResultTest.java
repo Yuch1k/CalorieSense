@@ -1,6 +1,7 @@
 package ru.CalorieSense.model;
 
 import org.junit.jupiter.api.Test;
+import ru.CalorieSense.model.MacronutrientResult;
 
 import static org.junit.jupiter.api.Assertions.*;
 
