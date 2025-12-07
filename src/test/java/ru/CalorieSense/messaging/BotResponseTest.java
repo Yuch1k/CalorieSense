@@ -1,27 +1,37 @@
 package ru.CalorieSense.messaging;
+
 import org.junit.jupiter.api.Test;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
-import ru.CalorieSense.messaging.BotResponse;
 
 import static org.junit.jupiter.api.Assertions.*;
-public class BotResponseTest {
-    @Test
-    void testConstructorAndGetters() {
-        ReplyKeyboard keyboard = org.mockito.Mockito.mock(ReplyKeyboard.class);
-        BotResponse response = new BotResponse(9L, "hi", "Markdown", keyboard);
 
-        assertEquals(9L, response.getChatId());
-        assertEquals("hi", response.getText());
-        assertEquals("Markdown", response.getParseMode());
-        assertEquals(keyboard, response.getReplyMarkup());
+class BotResponseTest {
+
+    @Test
+    void constructorStoresAllFields() {
+        Long chatId = 123L;
+        String text = "hello";
+        String parseMode = "Markdown";
+        ReplyKeyboard keyboard = new ReplyKeyboard() {};
+
+        BotResponse resp = new BotResponse(chatId, text, parseMode, keyboard);
+
+        assertEquals(chatId, resp.getChatId());
+        assertEquals(text, resp.getText());
+        assertEquals(parseMode, resp.getParseMode());
+        assertEquals(keyboard, resp.getReplyMarkup());
     }
 
     @Test
-    void testSimpleFactory() {
-        BotResponse response = BotResponse.simple(88L, "Hello");
-        assertEquals(88L, response.getChatId());
-        assertEquals("Hello", response.getText());
-        assertNull(response.getParseMode());
-        assertNull(response.getReplyMarkup());
+    void simpleFactorySetsDefaults() {
+        Long chatId = 42L;
+        String text = "simple";
+
+        BotResponse resp = BotResponse.simple(chatId, text);
+
+        assertEquals(chatId, resp.getChatId());
+        assertEquals(text, resp.getText());
+        assertNull(resp.getParseMode());
+        assertNull(resp.getReplyMarkup());
     }
 }

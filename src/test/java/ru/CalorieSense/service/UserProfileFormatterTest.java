@@ -1,62 +1,79 @@
 package ru.CalorieSense.service;
+
 import org.junit.jupiter.api.Test;
 import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
-import ru.CalorieSense.service.UserProfileFormatter;
 
 import static org.junit.jupiter.api.Assertions.*;
-public class UserProfileFormatterTest {
-    @Test
-    void testFormatFullProfileIncomplete() {
-        UserProfile profile = new UserProfile(7L);
-        CalorieCalculatorService calculator = new CalorieCalculatorService();
-        UserProfileFormatter formatter = new UserProfileFormatter(calculator);
 
-        String result = formatter.formatFullProfile(profile);
-        assertTrue(result.contains("Профиль не завершён"));
-        assertTrue(result.contains("Регистрация"));
+class UserProfileFormatterTest {
+
+    // Простейшая реализация CalorieCalculatorService только для теста форматтера
+    static class DummyCalorieCalculatorService extends CalorieCalculatorService {
+        @Override
+        public String getActivityLevelText(String level) {
+            return switch (level) {
+                case "low" -> "Низкая";
+                case "medium" -> "Средняя";
+                case "high" -> "Высокая";
+                default -> "Неизвестная";
+            };
+        }
     }
 
     @Test
-    void testFormatFullProfileComplete() {
-        UserProfile profile = new UserProfile(8L);
-        profile.setWeight(80);
+    void formatFullProfileReturnsWarningWhenIncomplete() {
+        UserProfileFormatter formatter = new UserProfileFormatter(new DummyCalorieCalculatorService());
+        UserProfile profile = new UserProfile(1L);
+        // профиль пустой, isComplete() вернёт false
+
+        String text = formatter.formatFullProfile(profile);
+
+        assertTrue(text.contains("Профиль не завершён"));
+        assertTrue(text.contains("Регистрация"));
+    }
+
+    @Test
+    void formatFullProfileFormatsAllFieldsWhenComplete() {
+        UserProfileFormatter formatter = new UserProfileFormatter(new DummyCalorieCalculatorService());
+        UserProfile profile = new UserProfile(1L);
         profile.setHeight(180);
-        profile.setAge(35);
+        profile.setWeight(75.0);
+        profile.setAge(30);
         profile.setSex("male");
         profile.setGoal("lose");
         profile.setActivityLevel("medium");
 
-        CalorieCalculatorService calculator = new CalorieCalculatorService();
-        UserProfileFormatter formatter = new UserProfileFormatter(calculator);
+        // чтобы isComplete() стал true, в реальном классе могут быть и другие поля;
+        // при необходимости заполни их здесь.
 
-        String result = formatter.formatFullProfile(profile);
-        assertTrue(result.contains("Ваш профиль"));
-        assertTrue(result.contains("Рост: *180 см*"));
-        assertTrue(result.contains("Пол: *male*"));
-        assertTrue(result.contains("Цель: *Похудение*"));
-        assertTrue(result.contains("Активность: *Средняя"));
+        String text = formatter.formatFullProfile(profile);
+
+        assertTrue(text.contains("Ваш профиль"));
+        assertTrue(text.contains("180 см"));
+        assertTrue(text.contains("75.0 кг"));
+        assertTrue(text.contains("30 лет"));
+        assertTrue(text.contains("Похудение"));
+        assertTrue(text.contains("Средняя"));
     }
 
     @Test
-    void testFormatCompletionMessage() {
-        UserProfile profile = new UserProfile(9L);
-        profile.setWeight(75);
+    void formatCompletionMessageUsesGoalAndActivityText() {
+        UserProfileFormatter formatter = new UserProfileFormatter(new DummyCalorieCalculatorService());
+        UserProfile profile = new UserProfile(1L);
         profile.setHeight(170);
-        profile.setAge(28);
+        profile.setWeight(65.0);
+        profile.setAge(25);
         profile.setSex("female");
         profile.setGoal("gain");
         profile.setActivityLevel("high");
 
-        CalorieCalculatorService calculator = new CalorieCalculatorService();
-        UserProfileFormatter formatter = new UserProfileFormatter(calculator);
+        String text = formatter.formatCompletionMessage(profile);
 
-        String result = formatter.formatCompletionMessage(profile);
-        assertTrue(result.contains("Регистрация завершена"));
-        assertTrue(result.contains("Ваш профиль"));
-        assertTrue(result.contains("Вес: 75 кг"));
-        assertTrue(result.contains("Пол: female"));
-        assertTrue(result.contains("Цель: Набор массы"));
-        assertTrue(result.contains("Активность: Большая"));
+        assertTrue(text.contains("Регистрация завершена"));
+        assertTrue(text.contains("170 см"));
+        assertTrue(text.contains("65.0 кг"));
+        assertTrue(text.contains("Набор массы"));
+        assertTrue(text.contains("Высокая"));
     }
 }

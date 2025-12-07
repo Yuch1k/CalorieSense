@@ -2,7 +2,6 @@ package ru.CalorieSense.repository;
 
 import org.junit.jupiter.api.Test;
 import ru.CalorieSense.model.Meal;
-import ru.CalorieSense.repository.InMemoryMealRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,37 +12,61 @@ import static org.junit.jupiter.api.Assertions.*;
 class InMemoryMealRepositoryTest {
 
     @Test
-    void testAddAndGetMealsByDate() {
+    void addAndGetMealsByDate() {
         InMemoryMealRepository repo = new InMemoryMealRepository();
-        Long chatId = 100L;
-        Long id = repo.generateId();
-        Meal meal = new Meal(id, chatId, LocalDateTime.now(), 450, 30, 12, 78, "Обед");
-        repo.addMeal(meal);
+        Long chatId = 10L;
+        LocalDate today = LocalDate.now();
 
-        List<Meal> todayMeals = repo.getTodayMeals(chatId);
-        assertFalse(todayMeals.isEmpty());
-        assertEquals(450, todayMeals.get(0).getCalories());
-        assertEquals("Обед", todayMeals.get(0).getDescription());
-    }
-
-    @Test
-    void testDeleteMeal() {
-        InMemoryMealRepository repo = new InMemoryMealRepository();
-        Long chatId = 101L;
-        Long id = repo.generateId();
-        Meal meal = new Meal(id, chatId, LocalDateTime.now(), 200, 10, 5, 18, "Перекус");
-        repo.addMeal(meal);
-
-        repo.deleteMeal(id);
-        List<Meal> todayMeals = repo.getTodayMeals(chatId);
-        assertTrue(todayMeals.isEmpty());
-    }
-
-    @Test
-    void testGenerateUniqueIds() {
-        InMemoryMealRepository repo = new InMemoryMealRepository();
         Long id1 = repo.generateId();
         Long id2 = repo.generateId();
-        assertNotEquals(id1, id2);
+
+        repo.addMeal(new Meal(id1, chatId, today.atTime(9, 0), 300, 20, 10, 40, "Завтрак"));
+        repo.addMeal(new Meal(id2, chatId, today.atTime(13, 0), 500, 30, 15, 60, "Обед"));
+
+        List<Meal> meals = repo.getMealsByDate(chatId, today);
+        assertEquals(2, meals.size());
+    }
+
+    @Test
+    void getTodayMealsUsesCurrentDate() {
+        InMemoryMealRepository repo = new InMemoryMealRepository();
+        Long chatId = 11L;
+        LocalDate today = LocalDate.now();
+
+        Long id = repo.generateId();
+        repo.addMeal(new Meal(id, chatId, today.atTime(12, 0), 400, 25, 10, 50, "Обед"));
+
+        List<Meal> meals = repo.getTodayMeals(chatId);
+        assertEquals(1, meals.size());
+    }
+
+    @Test
+    void deleteMealRemovesIt() {
+        InMemoryMealRepository repo = new InMemoryMealRepository();
+        Long chatId = 12L;
+        LocalDate today = LocalDate.now();
+
+        Long id = repo.generateId();
+        repo.addMeal(new Meal(id, chatId, today.atTime(8, 0), 200, 10, 5, 20, "Завтрак"));
+
+        repo.deleteMeal(id);
+
+        List<Meal> meals = repo.getMealsByDate(chatId, today);
+        assertTrue(meals.isEmpty());
+    }
+
+    @Test
+    void findByIdReturnsSavedMeal() {
+        InMemoryMealRepository repo = new InMemoryMealRepository();
+        Long chatId = 13L;
+        LocalDateTime ts = LocalDateTime.now();
+        Long id = repo.generateId();
+        Meal meal = new Meal(id, chatId, ts, 250, 15, 7, 30, "Перекус");
+
+        repo.addMeal(meal);
+
+        Meal loaded = repo.findById(id);
+        assertNotNull(loaded);
+        assertEquals("Перекус", loaded.getDescription());
     }
 }

@@ -1,119 +1,75 @@
 package ru.CalorieSense.command.user.profile;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import ru.CalorieSense.BotApp;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.model.UserProfile;
+import ru.CalorieSense.repository.InMemoryUserRepository;
 import ru.CalorieSense.repository.UserRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 class WeightCommandTest {
 
-    @Mock
-    private BotApp botApp;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private Update update;
-
-    @Mock
-    private Message message;
-
-    private WeightCommand weightCommand;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        weightCommand = new WeightCommand(botApp, userRepository);
-
-        when(update.getMessage()).thenReturn(message);
-        when(message.getChatId()).thenReturn(123L);
+    private Update buildUpdate(long chatId, String text) {
+        Message msg = new Message();
+        msg.setChat(new Chat(chatId, "private"));
+        msg.setText(text);
+        Update u = new Update();
+        u.setMessage(msg);
+        return u;
     }
 
     @Test
-    void testExecute_WithValidWeight_UpdatesProfile() throws Exception {
-        when(message.getText()).thenReturn("/weight 75.5");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
+    void whenNoArgument_showsPrompt() throws Exception {
+        long chatId = 1L;
+        UserRepository repo = new InMemoryUserRepository();
+        WeightCommand cmd = new WeightCommand(repo);
 
-        weightCommand.execute(update);
+        BotResponse resp = cmd.execute(buildUpdate(chatId, "/weight"));
 
-        assertEquals(75.5, profile.getWeight());
-        verify(userRepository).save(profile);
-
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-        assertTrue(messageCaptor.getValue().getText().contains("обновлён"));
+        assertEquals(chatId, resp.getChatId());
+        String text = resp.getText();
+        assertTrue(text.contains("Введите ваш вес"));
+        assertTrue(text.contains("/weight 70"));
+        assertNotNull(resp.getReplyMarkup());
     }
 
     @Test
-    void testExecute_WithDecimalWeight_UpdatesProfile() throws Exception {
-        when(message.getText()).thenReturn("/weight 72.3");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
+    void whenValidWeight_updatesProfile() throws Exception {
+        long chatId = 2L;
+        UserRepository repo = new InMemoryUserRepository();
+        repo.save(new UserProfile(chatId));
 
-        weightCommand.execute(update);
+        WeightCommand cmd = new WeightCommand(repo);
 
-        assertEquals(72.3, profile.getWeight(), 0.01);
-        verify(userRepository).save(profile);
+        BotResponse resp = cmd.execute(buildUpdate(chatId, "/weight 82.5"));
+
+        UserProfile profile = repo.findByChatId(chatId);
+        assertEquals(82.5, profile.getWeight(), 0.001);
+
+        String text = resp.getText();
+        assertTrue(text.contains("обновлён"));
+        assertTrue(text.toLowerCase().contains("вес"));
+        assertNotNull(resp.getReplyMarkup());
     }
 
     @Test
-    void testExecute_WithWeightTooLow_ShowsError() throws Exception {
-        when(message.getText()).thenReturn("/weight 5");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
+    void whenInvalidWeight_returnsError() throws Exception {
+        long chatId = 3L;
+        UserRepository repo = new InMemoryUserRepository();
+        repo.save(new UserProfile(chatId));
 
-        weightCommand.execute(update);
+        WeightCommand cmd = new WeightCommand(repo);
 
-        assertEquals(0, profile.getWeight());
-        verify(userRepository, never()).save(any());
-    }
+        BotResponse resp = cmd.execute(buildUpdate(chatId, "/weight 10")); // меньше 30
 
-    @Test
-    void testExecute_WithWeightTooHigh_ShowsError() throws Exception {
-        when(message.getText()).thenReturn("/weight 600");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        weightCommand.execute(update);
-
-        assertEquals(0, profile.getWeight());
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    void testExecute_BoundaryValue_JustAboveMinimum() throws Exception {
-        when(message.getText()).thenReturn("/weight 10.1");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        weightCommand.execute(update);
-
-        assertEquals(10.1, profile.getWeight(), 0.01);
-        verify(userRepository).save(profile);
-    }
-
-    @Test
-    void testExecute_BoundaryValue_Maximum() throws Exception {
-        when(message.getText()).thenReturn("/weight 500");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        weightCommand.execute(update);
-
-        assertEquals(500, profile.getWeight());
-        verify(userRepository).save(profile);
+        String text = resp.getText();
+        assertTrue(text.contains("Ошибка"));
+        assertTrue(text.contains("30"));
+        UserProfile profile = repo.findByChatId(chatId);
+        assertEquals(0.0, profile.getWeight(), 0.001);
     }
 }

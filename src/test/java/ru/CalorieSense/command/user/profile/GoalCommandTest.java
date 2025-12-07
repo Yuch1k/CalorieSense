@@ -1,128 +1,76 @@
 package ru.CalorieSense.command.user.profile;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import ru.CalorieSense.BotApp;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.model.UserProfile;
+import ru.CalorieSense.repository.InMemoryUserRepository;
 import ru.CalorieSense.repository.UserRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 class GoalCommandTest {
 
-    @Mock
-    private BotApp botApp;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private Update update;
-
-    @Mock
-    private Message message;
-
-    private GoalCommand goalCommand;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        goalCommand = new GoalCommand(botApp, userRepository);
-
-        when(update.getMessage()).thenReturn(message);
-        when(message.getChatId()).thenReturn(123L);
+    private Update buildUpdate(long chatId, String text) {
+        Message msg = new Message();
+        msg.setChat(new Chat(chatId, "private"));
+        msg.setText(text);
+        Update u = new Update();
+        u.setMessage(msg);
+        return u;
     }
 
     @Test
-    void testExecute_ButtonClick_ShowsPrompt() throws Exception {
-        when(message.getText()).thenReturn("🎯 Цель");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
+    void whenNoArgument_showsPrompt() throws Exception {
+        long chatId = 1L;
+        UserRepository repo = new InMemoryUserRepository();
+        GoalCommand cmd = new GoalCommand(repo);
 
-        goalCommand.execute(update);
+        BotResponse resp = cmd.execute(buildUpdate(chatId, "/goal"));
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-
-        SendMessage sentMessage = messageCaptor.getValue();
-        assertTrue(sentMessage.getText().contains("Текущая цель"));
-        assertTrue(sentMessage.getText().contains("/goal 1"));
+        assertEquals(chatId, resp.getChatId());
+        String text = resp.getText();
+        assertTrue(text.contains("Введите вашу цель"));
+        assertTrue(text.contains("/goal похудение"));
+        assertNotNull(resp.getReplyMarkup());
     }
 
     @Test
-    void testExecute_WithGoal1_SetsLose() throws Exception {
-        when(message.getText()).thenReturn("/goal 1");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
+    void whenValidGoal_updatesProfile() throws Exception {
+        long chatId = 2L;
+        UserRepository repo = new InMemoryUserRepository();
+        repo.save(new UserProfile(chatId));
 
-        goalCommand.execute(update);
+        GoalCommand cmd = new GoalCommand(repo);
 
-        assertEquals("lose", profile.getGoal());
-        verify(userRepository).save(profile);
+        BotResponse resp = cmd.execute(buildUpdate(chatId, "/goal похудение"));
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-        assertTrue(messageCaptor.getValue().getText().contains("Похудение"));
+        UserProfile profile = repo.findByChatId(chatId);
+        assertEquals("lose", profile.getGoal());  // маппинг \"похудение\" → lose
+
+        String text = resp.getText();
+        assertTrue(text.contains("обновлён"));      // общий текст из AbstractParameterCommand
+        assertTrue(text.toLowerCase().contains("цель"));
+        assertNotNull(resp.getReplyMarkup());
     }
 
     @Test
-    void testExecute_WithGoal2_SetsMaintain() throws Exception {
-        when(message.getText()).thenReturn("/goal 2");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
+    void whenInvalidGoal_returnsError() throws Exception {
+        long chatId = 3L;
+        UserRepository repo = new InMemoryUserRepository();
+        repo.save(new UserProfile(chatId));
 
-        goalCommand.execute(update);
+        GoalCommand cmd = new GoalCommand(repo);
 
+        BotResponse resp = cmd.execute(buildUpdate(chatId, "/goal что-то"));
+
+        String text = resp.getText();
+        assertTrue(text.contains("Ошибка"));
+        assertTrue(text.contains("поддержание, похудение или масса"));
+        UserProfile profile = repo.findByChatId(chatId);
+        // дефолтная цель профиля — maintain
         assertEquals("maintain", profile.getGoal());
-        verify(userRepository).save(profile);
-    }
-
-    @Test
-    void testExecute_WithGoal3_SetsGain() throws Exception {
-        when(message.getText()).thenReturn("/goal 3");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        goalCommand.execute(update);
-
-        assertEquals("gain", profile.getGoal());
-        verify(userRepository).save(profile);
-    }
-
-    @Test
-    void testExecute_WithTextLose_SetsLose() throws Exception {
-        when(message.getText()).thenReturn("/goal похудение");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        goalCommand.execute(update);
-
-        assertEquals("lose", profile.getGoal());
-        verify(userRepository).save(profile);
-    }
-
-    @Test
-    void testExecute_WithInvalidGoal_ShowsError() throws Exception {
-        when(message.getText()).thenReturn("/goal 5");
-        UserProfile profile = new UserProfile(123L);
-        profile.setGoal("maintain");
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        goalCommand.execute(update);
-
-        assertEquals("maintain", profile.getGoal()); // Не изменилась
-        verify(userRepository, never()).save(any());
-
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-        assertTrue(messageCaptor.getValue().getText().contains("Некорректный"));
     }
 }

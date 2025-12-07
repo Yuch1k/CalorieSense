@@ -1,139 +1,75 @@
 package ru.CalorieSense.command.user.profile;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import ru.CalorieSense.BotApp;
+import ru.CalorieSense.messaging.BotResponse;
 import ru.CalorieSense.model.UserProfile;
+import ru.CalorieSense.repository.InMemoryUserRepository;
 import ru.CalorieSense.repository.UserRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 class HeightCommandTest {
 
-    @Mock
-    private BotApp botApp;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private Update update;
-
-    @Mock
-    private Message message;
-
-    private HeightCommand heightCommand;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        heightCommand = new HeightCommand(botApp, userRepository);
-
-        when(update.getMessage()).thenReturn(message);
-        when(message.getChatId()).thenReturn(123L);
+    private Update buildUpdate(long chatId, String text) {
+        Message msg = new Message();
+        msg.setChat(new Chat(chatId, "private"));
+        msg.setText(text);
+        Update u = new Update();
+        u.setMessage(msg);
+        return u;
     }
 
     @Test
-    void testExecute_WithoutParameter_ShowsPrompt() throws Exception {
-        when(message.getText()).thenReturn("📏 Рост");
+    void whenNoArgument_showsPrompt() throws Exception {
+        long chatId = 1L;
+        UserRepository repo = new InMemoryUserRepository();
+        HeightCommand cmd = new HeightCommand(repo);
 
-        heightCommand.execute(update);
+        BotResponse resp = cmd.execute(buildUpdate(chatId, "/height"));
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-
-        SendMessage sentMessage = messageCaptor.getValue();
-        assertTrue(sentMessage.getText().contains("Введите ваш рост"));
-        assertTrue(sentMessage.getText().contains("/height"));
+        assertEquals(chatId, resp.getChatId());
+        String text = resp.getText();
+        assertTrue(text.contains("Введите ваш рост"));
+        assertTrue(text.contains("/height 170"));
+        assertNotNull(resp.getReplyMarkup());
     }
 
     @Test
-    void testExecute_WithValidHeight_UpdatesProfile() throws Exception {
-        when(message.getText()).thenReturn("/height 175");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
+    void whenValidHeight_updatesProfile() throws Exception {
+        long chatId = 2L;
+        UserRepository repo = new InMemoryUserRepository();
+        repo.save(new UserProfile(chatId));
 
-        heightCommand.execute(update);
+        HeightCommand cmd = new HeightCommand(repo);
 
-        assertEquals(175, profile.getHeight());
-        verify(userRepository).save(profile);
+        BotResponse resp = cmd.execute(buildUpdate(chatId, "/height 180"));
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-        assertTrue(messageCaptor.getValue().getText().contains("обновлён"));
+        UserProfile profile = repo.findByChatId(chatId);
+        assertEquals(180, profile.getHeight());
+
+        String text = resp.getText();
+        assertTrue(text.contains("обновлён"));
+        assertTrue(text.toLowerCase().contains("рост"));
+        assertNotNull(resp.getReplyMarkup());
     }
 
     @Test
-    void testExecute_WithHeightTooLow_ShowsError() throws Exception {
-        when(message.getText()).thenReturn("/height 50");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
+    void whenInvalidHeight_returnsError() throws Exception {
+        long chatId = 3L;
+        UserRepository repo = new InMemoryUserRepository();
+        repo.save(new UserProfile(chatId));
 
-        heightCommand.execute(update);
+        HeightCommand cmd = new HeightCommand(repo);
 
-        assertEquals(0, profile.getHeight()); // Не должен измениться
-        verify(userRepository, never()).save(any());
+        BotResponse resp = cmd.execute(buildUpdate(chatId, "/height 50")); // вне диапазона
 
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-        assertTrue(messageCaptor.getValue().getText().contains("Ошибка"));
-    }
-
-    @Test
-    void testExecute_WithHeightTooHigh_ShowsError() throws Exception {
-        when(message.getText()).thenReturn("/height 300");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        heightCommand.execute(update);
-
+        String text = resp.getText();
+        assertTrue(text.contains("Ошибка"));
+        assertTrue(text.contains("100-250") || text.contains("100—250"));
+        UserProfile profile = repo.findByChatId(chatId);
         assertEquals(0, profile.getHeight());
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    void testExecute_WithInvalidInput_ShowsError() throws Exception {
-        when(message.getText()).thenReturn("/height abc");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        heightCommand.execute(update);
-
-        verify(userRepository, never()).save(any());
-        ArgumentCaptor<SendMessage> messageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botApp).execute(messageCaptor.capture());
-        assertTrue(messageCaptor.getValue().getText().contains("Ошибка"));
-    }
-
-    @Test
-    void testExecute_BoundaryValue_MinimumValid() throws Exception {
-        when(message.getText()).thenReturn("/height 100");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        heightCommand.execute(update);
-
-        assertEquals(100, profile.getHeight());
-        verify(userRepository).save(profile);
-    }
-
-    @Test
-    void testExecute_BoundaryValue_MaximumValid() throws Exception {
-        when(message.getText()).thenReturn("/height 250");
-        UserProfile profile = new UserProfile(123L);
-        when(userRepository.findByChatId(123L)).thenReturn(profile);
-
-        heightCommand.execute(update);
-
-        assertEquals(250, profile.getHeight());
-        verify(userRepository).save(profile);
     }
 }

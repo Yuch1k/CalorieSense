@@ -2,48 +2,51 @@ package ru.CalorieSense.repository;
 
 import org.junit.jupiter.api.Test;
 import ru.CalorieSense.model.UserProfile;
-import ru.CalorieSense.repository.InMemoryUserRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryUserRepositoryTest {
 
     @Test
-    void testFindByChatIdCreatesProfile() {
+    void findByChatIdCreatesProfileIfMissing() {
         InMemoryUserRepository repo = new InMemoryUserRepository();
-        UserProfile profile = repo.findByChatId(123L);
-        assertNotNull(profile);
-        assertEquals(123L, profile.getChatId());
+
+        UserProfile p1 = repo.findByChatId(1L);
+        UserProfile p2 = repo.findByChatId(1L);
+
+        assertNotNull(p1);
+        assertSame(p1, p2);
+        assertEquals(1L, p1.getChatId());
     }
 
     @Test
-    void testSaveAndRetrieveProfile() {
+    void saveUserProfileOverridesExisting() {
         InMemoryUserRepository repo = new InMemoryUserRepository();
-        UserProfile profile = new UserProfile(555L);
-        profile.setWeight(90.4);
-        profile.setHeight(188);
+        UserProfile profile = new UserProfile(2L);
+        profile.setWeight(80);
         repo.save(profile);
-        UserProfile found = repo.findByChatId(555L);
-        assertEquals(90.4, found.getWeight());
-        assertEquals(188, found.getHeight());
+
+        UserProfile loaded = repo.findByChatId(2L);
+        assertEquals(80, loaded.getWeight());
     }
 
     @Test
-    void testUpdateWeight() {
+    void updateMethodsChangeFields() {
         InMemoryUserRepository repo = new InMemoryUserRepository();
-        UserProfile p = repo.findByChatId(77L);
-        repo.updateWeight(77L, 72.4);
-        UserProfile updated = repo.findByChatId(77L);
-        assertEquals(72.4, updated.getWeight());
-    }
+        Long chatId = 3L;
+        repo.updateWeight(chatId, 75.5);
+        repo.updateHeight(chatId, 182);
+        repo.updateAge(chatId, 29);
+        repo.updateSex(chatId, "female");
+        repo.updateGoal(chatId, "lose");
+        repo.updateActivityLevel(chatId, "medium");
 
-    @Test
-    void testUpdateGoalAndActivity() {
-        InMemoryUserRepository repo = new InMemoryUserRepository();
-        repo.updateGoal(22L, "gain");
-        repo.updateActivityLevel(22L, "medium");
-        UserProfile profile = repo.findByChatId(22L);
-        assertEquals("gain", profile.getGoal());
+        UserProfile profile = repo.findByChatId(chatId);
+        assertEquals(75.5, profile.getWeight());
+        assertEquals(182, profile.getHeight());
+        assertEquals(29, profile.getAge());
+        assertEquals("female", profile.getSex());
+        assertEquals("lose", profile.getGoal());
         assertEquals("medium", profile.getActivityLevel());
     }
 }

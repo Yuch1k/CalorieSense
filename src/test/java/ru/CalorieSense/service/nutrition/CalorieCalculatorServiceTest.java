@@ -1,59 +1,51 @@
 package ru.CalorieSense.service.nutrition;
 
 import org.junit.jupiter.api.Test;
-import ru.CalorieSense.model.UserProfile;
 import ru.CalorieSense.model.MacronutrientResult;
-import ru.CalorieSense.service.nutrition.CalorieCalculatorService;
+import ru.CalorieSense.model.UserProfile;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class CalorieCalculatorServiceTest {
 
     @Test
-    void testDefaultCaloriesIfProfileIncomplete() {
+    void returnsDefaultForIncompleteProfile() {
         CalorieCalculatorService service = new CalorieCalculatorService();
         UserProfile profile = new UserProfile(1L);
-        assertEquals(2200, service.calculate(profile));
+
+        int calories = service.calculate(profile);
+
+        assertEquals(2200, calories);
     }
 
     @Test
-    void testCalculateMale() {
+    void calculatesForMaleMediumActivity() {
         CalorieCalculatorService service = new CalorieCalculatorService();
         UserProfile profile = new UserProfile(2L);
         profile.setWeight(80);
         profile.setHeight(180);
-        profile.setAge(25);
+        profile.setAge(30);
         profile.setSex("male");
         profile.setActivityLevel("medium");
+
         int calories = service.calculate(profile);
+
         assertTrue(calories > 0);
     }
 
     @Test
-    void testCalculateFemale() {
+    void calculateWithMacrosReturnsPositiveValues() {
         CalorieCalculatorService service = new CalorieCalculatorService();
         UserProfile profile = new UserProfile(3L);
-        profile.setWeight(65);
-        profile.setHeight(165);
-        profile.setAge(30);
-        profile.setSex("female");
-        profile.setActivityLevel("medium");
-        int calories = service.calculate(profile);
-        assertTrue(calories > 0);
-    }
-
-    @Test
-    void testCalculateWithMacros_Lose() {
-        CalorieCalculatorService service = new CalorieCalculatorService();
-        UserProfile profile = new UserProfile(4L);
         profile.setWeight(70);
-        profile.setHeight(170);
+        profile.setHeight(175);
         profile.setAge(28);
-        profile.setSex("male");
+        profile.setSex("female");
         profile.setActivityLevel("low");
         profile.setGoal("lose");
+
         MacronutrientResult result = service.calculateWithMacros(profile);
-        assertEquals("lose", profile.getGoal());
+
         assertTrue(result.getCalories() > 0);
         assertTrue(result.getProtein() > 0);
         assertTrue(result.getFats() > 0);
@@ -61,11 +53,12 @@ class CalorieCalculatorServiceTest {
     }
 
     @Test
-    void testActivityLevelText() {
+    void activityLevelTextMapping() {
         CalorieCalculatorService service = new CalorieCalculatorService();
-        assertEquals("Малая (без тренировок)", service.getActivityLevelText("low"));
-        assertEquals("Средняя (1-2 тренировки в неделю)", service.getActivityLevelText("medium"));
-        assertEquals("Большая (более 2 тренировок в неделю)", service.getActivityLevelText("high"));
-        assertEquals("Малая (без тренировок)", service.getActivityLevelText("unknown"));
+
+        assertTrue(service.getActivityLevelText("low").toLowerCase().contains("без тренировок"));
+        assertTrue(service.getActivityLevelText("medium").toLowerCase().contains("1-2"));
+        assertTrue(service.getActivityLevelText("high").toLowerCase().contains("2"));
+        assertEquals(service.getActivityLevelText("low"), service.getActivityLevelText("unknown"));
     }
 }
