@@ -111,4 +111,48 @@ public class JdbcMealRepository implements MealRepository {
         String description = rs.getString("description");
         return new Meal(id, chatId, timestamp, calories, protein, fats, carbs, description);
     }
+
+    @Override
+    public Meal findById(Long id) {
+        String sql = "SELECT id, chat_id, timestamp, calories, protein, fats, carbs, description " +
+                "FROM meal WHERE id = ?";
+        try (Connection conn = database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToMeal(rs);
+                } else {
+                    return null;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при загрузке приёма пищи id=" + id, e);
+        }
+    }
+
+    @Override
+    public void updateMeal(Meal meal) {
+        String sql = "UPDATE meal SET chat_id = ?, timestamp = ?, calories = ?, protein = ?, fats = ?, carbs = ?, description = ? " +
+                "WHERE id = ?";
+
+        try (Connection conn = database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, meal.getChatId());
+            ps.setTimestamp(2, Timestamp.valueOf(meal.getDateTime()));
+            ps.setInt(3, meal.getCalories());
+            ps.setInt(4, meal.getProtein());
+            ps.setInt(5, meal.getFats());
+            ps.setInt(6, meal.getCarbs());
+            ps.setString(7, meal.getDescription());
+            ps.setLong(8, meal.getId());
+
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при обновлении приёма пищи id=" + meal.getId(), e);
+        }
+    }
 }

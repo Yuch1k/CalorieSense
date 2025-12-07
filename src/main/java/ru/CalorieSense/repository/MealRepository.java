@@ -19,4 +19,9 @@ public interface MealRepository {
 
     // Удалить приём пищи по ID
     void deleteMeal(Long mealId);
+
+    // сценарии ниже нужны для редактирования приема пищи
+    Meal findById(Long id);
+
+    void updateMeal(Meal meal);
 }

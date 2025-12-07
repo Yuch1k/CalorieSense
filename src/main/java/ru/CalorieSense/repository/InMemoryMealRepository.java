@@ -41,4 +41,15 @@ public class InMemoryMealRepository implements MealRepository {
     public Long generateId() {
         return idGenerator.getAndIncrement();
     }
+
+
+    @Override
+    public Meal findById(Long id) {
+        return storage.get(id);
+    }
+
+    @Override
+    public void updateMeal(Meal meal) {
+        storage.put(meal.getId(), meal);
+    }
 }

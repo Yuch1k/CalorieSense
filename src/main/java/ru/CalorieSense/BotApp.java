@@ -45,6 +45,10 @@ import ru.CalorieSense.db.Database;
 
 import ru.CalorieSense.messaging.MessageSender;
 
+import ru.CalorieSense.service.calendar.CalendarService;
+import ru.CalorieSense.command.calendar.CalendarCommand;
+import ru.CalorieSense.command.nutrition.meal.MealEditCommand;
+
 public class BotApp extends TelegramLongPollingBot {
 
     private final String botUsername;
@@ -61,6 +65,7 @@ public class BotApp extends TelegramLongPollingBot {
         // Сервисы
         CalorieCalculatorService calculator = new CalorieCalculatorService();
         MealTrackingService mealTracker = new MealTrackingService(mealRepository);
+        CalendarService calendarService = new CalendarService();
 
         // Системные команды
         Command unknownCommand = new UnknownCommand();
@@ -84,11 +89,24 @@ public class BotApp extends TelegramLongPollingBot {
         Command manualInputCommand = new ManualInputCommand(mealRepository);
         Command photoInputCommand = new PhotoInputCommand();
 
+        // Команды календарч
+        Command calendarCommand = new CalendarCommand(calendarService);
+
         // Создаём sender
         MessageSender sender = new MessageSender(this);
 
+        MealEditCommand mealEditCommand = new MealEditCommand(mealRepository);
+
         // Роутер
-        CommandRouter router = new CommandRouter(unknownCommand, sender);
+        CommandRouter router = new CommandRouter(
+                unknownCommand,
+                sender,
+                calendarService,
+                mealTracker,
+                calculator,
+                userRepository,
+                mealRepository,
+                mealEditCommand);
         this.router = router;
 
         // Регистрация системных команд
@@ -111,6 +129,12 @@ public class BotApp extends TelegramLongPollingBot {
         router.register("/addmeal", addMealCommand);
         router.register("/manualinput", manualInputCommand);
         router.register("/photoinput", photoInputCommand);
+
+        // Регистрация команд календаря
+        router.register("/calendar", calendarCommand);
+
+
+
     }
 
     @Override

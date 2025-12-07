@@ -101,40 +101,62 @@ public class ManualInputCommand implements Command {
                 if (text.matches("\\d+")) {
                     int carbs = Integer.parseInt(text);
                     if (carbs >= 0 && carbs <= 1000) {
-                        // Сохраняем приём пищи
-                        Long mealId = mealRepository.generateId();
-                        Meal meal = new Meal(
-                                mealId,
+                        state.setCarbs(carbs);
+                        state.next(); // переходим к DESCRIPTION
+                        stateMap.put(chatId, state);
+                        return new BotResponse(
                                 chatId,
-                                LocalDateTime.now(),
-                                state.getCalories(),
-                                state.getProtein(),
-                                state.getFats(),
-                                carbs,
-                                "Ручной ввод"
+                                "Теперь введите название приёма пищи (например: Завтрак, Обед, Ужин):",
+                                "Markdown",
+                                keyboard
                         );
-                        mealRepository.addMeal(meal);
-
-                        ReplyKeyboard keyboard1 = KeyboardFactory.getMainKeyboard();
-                        String msg = "✅ *Приём пищи добавлен!*\n\n" +
-                                "🔥 Калории: " + state.getCalories() + " ккал\n" +
-                                "🍗 Белки: " + state.getProtein() + " г\n" +
-                                "🧈 Жиры: " + state.getFats() + " г\n" +
-                                "🍞 Углеводы: " + carbs + " г\n\n" +
-                                "Используйте '📊 Мои калории' для просмотра прогресса за день.";
-                        state.reset();
-                        stateMap.remove(chatId);
-                        return new BotResponse(chatId, msg, "Markdown", keyboard1);
                     } else {
-                        return new BotResponse(chatId,
-                                "❌ Углеводы должны быть от 0 до 1000 г. Попробуйте ещё раз:",
-                                "Markdown", keyboard);
+                        return new BotResponse(chatId, "Введите количество углеводов от 0 до 1000.", "Markdown", keyboard);
                     }
                 } else {
-                    return new BotResponse(chatId,
-                            "❌ Введите число (например: 50)", "Markdown", keyboard);
+                    return new BotResponse(chatId, "Введите целое число углеводов, например 50.", "Markdown", keyboard);
                 }
             }
+            case DESCRIPTION -> {
+                if (text.isBlank()) {
+                    return new BotResponse(
+                            chatId,
+                            "Название не может быть пустым. Введите, например: Завтрак, Обед или Ужин.",
+                            "Markdown",
+                            keyboard
+                    );
+                }
+
+                state.setDescription(text);
+
+                Long mealId = mealRepository.generateId();
+                Meal meal = new Meal(
+                        mealId,
+                        chatId,
+                        LocalDateTime.now(),
+                        state.getCalories(),
+                        state.getProtein(),
+                        state.getFats(),
+                        state.getCarbs(),
+                        state.getDescription()
+                );
+                mealRepository.addMeal(meal);
+
+                ReplyKeyboard mainKeyboard = KeyboardFactory.getMainKeyboard();
+                String msg = "✅ Приём пищи добавлен!\n\n" +
+                        "Название: " + state.getDescription() + "\n" +
+                        "Калории: " + state.getCalories() + "\n" +
+                        "Белки: " + state.getProtein() + "\n" +
+                        "Жиры: " + state.getFats() + "\n" +
+                        "Углеводы: " + state.getCarbs();
+
+                state.reset();
+                stateMap.remove(chatId);
+
+                return new BotResponse(chatId, msg, "Markdown", mainKeyboard);
+            }
+
+
         }
 
 

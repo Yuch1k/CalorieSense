@@ -24,7 +24,8 @@ public class KeyboardFactory {
         row1.add("📝 Регистрация");
 
         KeyboardRow row2 = new KeyboardRow();
-        row2.add("🍽️ Добавить приём пищи");  // НОВАЯ КНОПКА
+        row2.add("🍽️ Добавить приём пищи");
+        row2.add("📅 Календарь питания");
 
         KeyboardRow row3 = new KeyboardRow();
         row3.add("👤 Профиль");

@@ -2,7 +2,7 @@ package ru.CalorieSense.model;
 
 public class MealInputState {
     public enum Step {
-        NONE, CALORIES, PROTEIN, FATS, CARBS
+        NONE, CALORIES, PROTEIN, FATS, CARBS, DESCRIPTION
     }
 
     private Step step = Step.NONE;
@@ -10,6 +10,7 @@ public class MealInputState {
     private Integer protein;
     private Integer fats;
     private Integer carbs;
+    private String description;
 
     public Step getStep() {
         return step;
@@ -25,7 +26,8 @@ public class MealInputState {
             case CALORIES -> step = Step.PROTEIN;
             case PROTEIN -> step = Step.FATS;
             case FATS -> step = Step.CARBS;
-            case CARBS -> step = Step.NONE;
+            case CARBS -> step = Step.DESCRIPTION;
+            case DESCRIPTION -> step = Step.NONE;
         }
     }
 
@@ -35,6 +37,7 @@ public class MealInputState {
         protein = null;
         fats = null;
         carbs = null;
+        description = null;
     }
 
     public Integer getCalories() {
@@ -67,5 +70,13 @@ public class MealInputState {
 
     public void setCarbs(Integer carbs) {
         this.carbs = carbs;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }
