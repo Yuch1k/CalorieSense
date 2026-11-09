@@ -28,6 +28,7 @@ import ru.CalorieSense.command.user.registration.RegisterScenario;
 // Команды питания
 import ru.CalorieSense.command.nutrition.CaloriesCommand;
 import ru.CalorieSense.command.nutrition.meal.AddMealCommand;
+import ru.CalorieSense.command.nutrition.meal.HistoryCommand;
 import ru.CalorieSense.command.nutrition.meal.ManualInputCommand;
 import ru.CalorieSense.command.nutrition.meal.PhotoInputCommand;
 
@@ -80,6 +81,7 @@ public class BotApp extends TelegramLongPollingBot {
         Command addMealCommand = new AddMealCommand(this);
         Command manualInputCommand = new ManualInputCommand(this, mealRepository);
         Command photoInputCommand = new PhotoInputCommand(this);
+        Command historyCommand = new HistoryCommand(this, mealTracker);
 
         // Инициализация роутера
         this.router = new CommandRouter(unknownCommand);
@@ -104,6 +106,7 @@ public class BotApp extends TelegramLongPollingBot {
         router.register("/addmeal", addMealCommand);
         router.register("/manualinput", manualInputCommand);
         router.register("/photoinput", photoInputCommand);
+        router.register("/history", historyCommand);
     }
 
     @Override
