@@ -122,16 +122,36 @@ public class BotApp extends TelegramLongPollingBot {
         return botUsername;
     }
 
+    /**
+     * Создаёт бота. Токен и имя берутся из переменных окружения BOT_TOKEN и BOT_USERNAME,
+     * а если они не заданы — из файла настроек (токен в репозитории не хранится).
+     */
     public static BotApp fromProperties(String resourceName) throws IOException {
         Properties props = new Properties();
         try (InputStream is = BotApp.class.getClassLoader().getResourceAsStream(resourceName)) {
-            if (is == null) {
-                throw new IOException("Не найден файл: " + resourceName);
+            if (is != null) {
+                props.load(is);
             }
-            props.load(is);
         }
-        String token = props.getProperty("bot.token");
-        String username = props.getProperty("bot.username");
+        String token = resolveSetting(System.getenv("BOT_TOKEN"), props.getProperty("bot.token"));
+        String username = resolveSetting(System.getenv("BOT_USERNAME"), props.getProperty("bot.username"));
+        if (token == null) {
+            throw new IllegalStateException(
+                    "Не задан токен бота: установите переменную окружения BOT_TOKEN");
+        }
         return new BotApp(token, username);
+    }
+
+    /**
+     * Значение настройки: переменная окружения важнее файла, пустые строки не учитываются.
+     */
+    static String resolveSetting(String envValue, String propertyValue) {
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue.trim();
+        }
+        if (propertyValue != null && !propertyValue.isBlank()) {
+            return propertyValue.trim();
+        }
+        return null;
     }
 }

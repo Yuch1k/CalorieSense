@@ -38,11 +38,12 @@ src/main/java/ru/CalorieSense/
 ## Запуск
 
 1. Получите токен бота у [@BotFather](https://t.me/BotFather).
-2. Укажите токен и имя бота в `src/main/resources/config.properties`:
-   ```properties
-   bot.token=<токен>
-   bot.username=<имя бота>
+2. Задайте токен через переменную окружения (в репозиторий токен не коммитится):
+   ```bash
+   export BOT_TOKEN=<токен>             # Windows PowerShell: $env:BOT_TOKEN="<токен>"
+   export BOT_USERNAME=CalorieSense_bot  # необязательно, по умолчанию берётся из config.properties
    ```
+   В IntelliJ IDEA: Run → Edit Configurations → Environment variables.
 3. Запустите `ru.CalorieSense.Main` из IDE или соберите проект: `mvn package`.
 
 ## Тесты
